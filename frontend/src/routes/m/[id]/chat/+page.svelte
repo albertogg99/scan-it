@@ -109,17 +109,18 @@
     })();
   });
   onDestroy(() => { navigationVersion++; streamController?.abort(); });
-  async function send(text: string, file: File | null) {
+  async function send(text: string, files: File[]) {
     if (!current) return;
     const version = navigationVersion;
     const conversationId = current.id;
     busy = true; error = '';
     try {
-      const attachments = file ? [(await upload(file)).id] : [];
+      const attachments = [];
+      for (const file of files) attachments.push(await upload(file));
       if (version !== navigationVersion) return;
-      const run = await sendMessage(conversationId, text, attachments);
+      const run = await sendMessage(conversationId, text, attachments.map(item => item.id));
       if (version !== navigationVersion || !current) return;
-      const user: Message = { id: run.user_message_id, role: 'user', content: text, reasoning: null, parts: null, status: 'completed', error: null, created_at: new Date().toISOString(), attachments: file ? [{ id: attachments[0], mime: file.type, size: file.size }] : [], tool_calls: [] };
+      const user: Message = { id: run.user_message_id, role: 'user', content: text, reasoning: null, parts: null, status: 'completed', error: null, created_at: new Date().toISOString(), attachments, tool_calls: [] };
       current = { ...current, messages: [...current.messages, user, initialLive(run.assistant_message_id).assistant], active_run_id: run.run_id };
       void connect(run.run_id, run.assistant_message_id);
       void history().then(value => { if (version === navigationVersion) items = value; }).catch(() => {});

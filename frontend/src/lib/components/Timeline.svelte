@@ -25,7 +25,7 @@
     <article class:user-message={message.role === 'user'} class="message">
       <div class="message-meta">{message.role === 'user' ? t('message') : message.status === 'failed' ? t('failed') : message.status === 'cancelled' ? t('cancelled') : ''}</div>
       {#if message.role === 'user'}
-        <p class="message-text">{message.content}</p>
+        {#if message.content}<p class="message-text">{message.content}</p>{/if}
       {:else if message.parts?.length}
         {#each groupParts(message.parts) as part}
           {#if part.type === 'text'}<Markdown text={part.text} />

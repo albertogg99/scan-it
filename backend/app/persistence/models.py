@@ -107,6 +107,7 @@ class Attachment(Base):
     mime: Mapped[str] = mapped_column(String(32))
     size: Mapped[int] = mapped_column(Integer)
     data: Mapped[bytes] = mapped_column(LargeBinary)
+    transcript: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     conversation: Mapped[Conversation | None] = relationship(back_populates="attachments")
     message: Mapped[Message | None] = relationship(back_populates="attachments")

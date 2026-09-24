@@ -13,8 +13,22 @@ router = APIRouter(prefix="/api/attachments")
 
 
 def require_image_input(settings: Settings, attachment_ids: list[str]) -> None:
-    if attachment_ids and settings.llm_image_input != "supported":
+    if attachment_ids and "supported" not in (settings.llm_image_input, settings.audio_input):
         raise error(422, "image_input_unsupported", "Image input is not verified for this provider.")
+
+
+def require_media_input(settings: Settings, attachments: list[Attachment]) -> None:
+    for attachment in attachments:
+        if attachment.mime.startswith("audio/") and settings.audio_input != "supported":
+            raise error(422, "audio_input_unsupported", "Audio input is not verified for this provider.")
+        if attachment.mime.startswith("image/") and settings.llm_image_input != "supported":
+            raise error(422, "image_input_unsupported", "Image input is not verified for this provider.")
+
+
+def sniff_media(data: bytes) -> str | None:
+    if data.startswith(b"RIFF") and data[8:12] == b"WAVE" and len(data) >= 44:
+        return "audio/wav"
+    return sniff_image(data)
 
 
 def sniff_image(data: bytes) -> str | None:
@@ -39,10 +53,11 @@ async def upload_attachment(
     data = await file.read(settings.max_upload_bytes + 1)
     await file.close()
     if len(data) > settings.max_upload_bytes:
-        raise error(413, "file_too_large", "Image exceeds the upload limit.")
-    detected = sniff_image(data)
-    if not detected or detected != file.content_type or detected not in settings.allowed_image_mime.split(","):
-        raise error(415, "unsupported_media_type", "Image format does not match an allowed MIME type.")
+        raise error(413, "file_too_large", "File exceeds the upload limit.")
+    detected = sniff_media(data)
+    allowed = settings.allowed_image_mime.split(",") + settings.allowed_audio_mime.split(",")
+    if not detected or detected != file.content_type or detected not in allowed:
+        raise error(415, "unsupported_media_type", "File format does not match an allowed MIME type.")
     attachment = Attachment(user_sub=user_sub, mime=detected, size=len(data), data=data)
     session.add(attachment)
     await session.commit()

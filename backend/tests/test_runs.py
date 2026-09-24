@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 from pathlib import Path
 
@@ -317,3 +318,62 @@ async def test_supported_image_data_urls_in_history(running_api, monkeypatch):
     await manager.TASKS[second.json()["run_id"]]
     assert seen[1][2]["content"][1]["image_url"]["url"] == seen[0][-1]["content"][1]["image_url"]["url"]
     assert seen[1][3] == {"role": "assistant", "content": "Answer"}
+
+
+@pytest.mark.asyncio
+async def test_voice_message_forwards_input_audio(running_api, monkeypatch):
+    client, factory, user = running_api
+    wav = b"RIFF" + (36).to_bytes(4, "little") + b"WAVEfmt " + b"\x00" * 28
+    seen = []
+
+    async def completion(settings, messages, tools):
+        seen.append(messages)
+        yield {"content": "Heard"}, "stop"
+
+    monkeypatch.setattr(manager, "stream_completion", completion)
+    uploaded = await client.post("/api/attachments", files={"file": ("voice.wav", wav, "audio/wav")})
+    assert uploaded.status_code == 201 and uploaded.json()["mime"] == "audio/wav"
+    audio_id = uploaded.json()["id"]
+    image_only = Settings(_env_file=None, llm_api_key="fake-test-key", llm_image_input="supported")
+    app.dependency_overrides[get_settings] = lambda: image_only
+    rejected = await client.post("/api/conversations/conv-1/messages", json={"text": "", "attachment_ids": [audio_id]})
+    assert rejected.status_code == 422 and rejected.json()["detail"]["code"] == "audio_input_unsupported"
+    app.dependency_overrides[get_settings] = lambda: Settings(_env_file=None, llm_api_key="fake-test-key", llm_audio_input="supported")
+    assert (await client.post("/api/conversations/conv-1/messages", json={"text": " "})).status_code == 422
+    sent = await client.post("/api/conversations/conv-1/messages", json={"text": "", "attachment_ids": [audio_id]})
+    assert sent.status_code == 202, sent.text
+    await manager.TASKS[sent.json()["run_id"]]
+    [audio] = seen[0][-1]["content"]
+    assert audio["type"] == "input_audio" and audio["input_audio"]["format"] == "wav"
+    assert base64.b64decode(audio["input_audio"]["data"]) == wav
+
+
+@pytest.mark.asyncio
+async def test_voice_message_is_transcribed_once_before_the_llm(running_api, monkeypatch):
+    client, factory, user = running_api
+    wav = b"RIFF" + (36).to_bytes(4, "little") + b"WAVEfmt " + b"\x00" * 28
+    seen, heard = [], []
+
+    async def completion(settings, messages, tools):
+        seen.append(messages)
+        yield {"content": "Here are the parkings"}, "stop"
+
+    async def transcribe(settings, data, mime):
+        heard.append((data, mime))
+        return "List all parking places."
+
+    monkeypatch.setattr(manager, "stream_completion", completion)
+    monkeypatch.setattr(manager.speech, "transcribe", transcribe)
+    app.dependency_overrides[get_settings] = lambda: Settings(_env_file=None, llm_api_key="fake-test-key", stt_base_url="http://stt.test/v1")
+    assert (await client.get("/api/config/public")).json()["audio_input"] == "supported"
+    audio_id = (await client.post("/api/attachments", files={"file": ("voice.wav", wav, "audio/wav")})).json()["id"]
+    sent = await client.post("/api/conversations/conv-1/messages", json={"text": "", "attachment_ids": [audio_id]})
+    assert sent.status_code == 202, sent.text
+    await manager.TASKS[sent.json()["run_id"]]
+    assert seen[0][-1] == {"role": "user", "content": "List all parking places."}
+    second = await client.post("/api/conversations/conv-1/messages", json={"text": "Thanks"})
+    await manager.TASKS[second.json()["run_id"]]
+    assert seen[1][2] == {"role": "user", "content": "List all parking places."}
+    assert heard == [(wav, "audio/wav")]
+    detail = (await client.get("/api/conversations/conv-1")).json()["messages"][0]
+    assert detail["content"] == "" and "transcript" not in detail["attachments"][0]

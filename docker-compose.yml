@@ -113,6 +113,10 @@ services:
       SWISSCOM_API_KEY: ${SWISSCOM_API_KEY:-}
       LLM_USER_AGENT: ${LLM_USER_AGENT:-SwissDiscover/0.1 (hackathon demo)}
       LLM_IMAGE_INPUT: ${LLM_IMAGE_INPUT:-unknown}
+      LLM_AUDIO_INPUT: ${LLM_AUDIO_INPUT:-unknown}
+      STT_BASE_URL: ${STT_BASE_URL:-}
+      STT_MODEL: ${STT_MODEL:-whisper-large-v3}
+      STT_API_KEY: ${STT_API_KEY:-}
       OIDC_ISSUER: ${PUBLIC_AUTH_URL:-http://${PUBLIC_HOST:-localhost}:${KEYCLOAK_PORT:-8080}}/realms/swiss-discover
       OIDC_JWKS_URL: http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs
       OIDC_AUDIENCE: swiss-discover-api
@@ -127,6 +131,7 @@ services:
       APPROVAL_TIMEOUT_S: "600"
       MAX_UPLOAD_BYTES: "5242880"
       ALLOWED_IMAGE_MIME: image/png,image/jpeg,image/webp,image/gif
+      ALLOWED_AUDIO_MIME: audio/wav
       MAX_MESSAGE_CHARS: "8000"
     ports:
       - "${BACKEND_PORT:-8000}:8000"

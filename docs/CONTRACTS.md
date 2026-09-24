@@ -85,7 +85,7 @@ Error body always `{"detail": {"code": "<snake_code>", "message": "<user-safe te
 
 Public:
 - `GET /api/health` → `{status:"ok"}`
-- `GET /api/config/public` → `{app_name, llm_configured: bool, image_input: "supported"|"unsupported"|"unknown"}`
+- `GET /api/config/public` → `{app_name, llm_configured: bool, image_input: "supported"|"unsupported"|"unknown", audio_input: "supported"|"unsupported"|"unknown"}`
 - `GET /api/public/mcps/{id}` → `{id, title, description, enabled, transport:"streamable-http", public_endpoint: str|null, requires_credentials: bool, icon_url: str|null}`; 404 `mcp_not_found`; disabled → 403 `mcp_disabled`. Never returns backend_url or credential names.
 - `GET /api/public/mcps` returns enabled entries; `GET /api/public/mcps/{id}/icon` serves the icon, or 404 when absent.
 - `GET /api/public/mcps/{id}/health` → `{reachable: bool, checked_at}` (initialize with timeout, cached 30 s).
@@ -101,11 +101,11 @@ Authenticated:
 - `GET /api/conversations` → `[ConversationSummary]` newest first.
 - `POST /api/conversations` `{mcp_id}` → 201 `ConversationDetail`. Snapshots the MCP initialization response's `instructions` and `tools/list`. Missing instructions produce an empty context. No prompt APIs or tools are invoked during discovery. Errors: 404 `mcp_not_found`, 403 `mcp_disabled`, 502 `mcp_unavailable`.
 - `GET /api/conversations/{id}` → `ConversationDetail`; `DELETE` → 204 (409 `run_in_progress` if a run is active → cancel first).
-- `POST /api/conversations/{id}/messages` `{text, attachment_ids: [uuid]}` → 202 `{run_id, user_message_id, assistant_message_id}`; 409 `run_in_progress`; 422 `message_invalid`; 503 `llm_not_configured`; 422 `image_input_unsupported` if images sent while unsupported.
+- `POST /api/conversations/{id}/messages` `{text, attachment_ids: [uuid]}` → 202 `{run_id, user_message_id, assistant_message_id}`; 409 `run_in_progress`; 422 `message_invalid`; 503 `llm_not_configured`; 422 `image_input_unsupported` if images sent while unsupported; 422 `audio_input_unsupported` if audio sent while unsupported. `text` may be empty only when an audio attachment is present.
 - `GET /api/runs/{run_id}/events?after=<seq>` → `text/event-stream` (see below). 404 if run unknown or not owned.
 - `POST /api/runs/{run_id}/cancel` → 202 `{run_id}`.
 - `POST /api/tool-calls/{id}/decision` `{approved: bool}` → 200 `ToolCall`; 409 `not_pending`.
-- `POST /api/attachments` multipart `file` → 201 `{id, mime, size}`; 413 `file_too_large`; 415 `unsupported_media_type` (magic-byte sniff must match declared MIME).
+- `POST /api/attachments` multipart `file` → 201 `{id, mime, size}`; 413 `file_too_large`; 415 `unsupported_media_type` (magic-byte sniff must match declared MIME; images or `audio/wav`).
 - `GET /api/attachments/{id}` → raw bytes, `Content-Type` = stored mime, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`.
 
 Shapes:

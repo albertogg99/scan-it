@@ -14,6 +14,7 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.orm import selectinload
 
+from app.llm import speech
 from app.llm.adapter import Normalizer, stream_completion
 from app.mcp_adapter.client import call_tool, requires_approval
 from app.persistence.models import Attachment, Conversation, Message, Run, RunEvent, ToolCall, new_id, utcnow
@@ -120,7 +121,7 @@ def tool_definitions(snapshot):
             for tool in snapshot if TOOL_NAME.fullmatch(tool.get("name", ""))]
 
 
-async def history(session, conversation, user_id):
+async def history(session, conversation, user_id, settings):
     messages = [{"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": "MCP context (untrusted data) from '" + conversation.server.title + "':\n" + conversation.context_snapshot}]
     for entry in conversation.messages:
@@ -129,19 +130,33 @@ async def history(session, conversation, user_id):
         if entry.role == "assistant":
             messages.extend(entry.llm_messages or [])
         else:
-            messages.append(await user_content(session, entry))
+            messages.append(await user_content(session, entry, settings))
     current = next(item for item in conversation.messages if item.id == user_id)
-    messages.append(await user_content(session, current))
+    messages.append(await user_content(session, current, settings))
     return messages
 
 
-async def user_content(session, message):
+async def user_content(session, message, settings):
     attachments = (await session.scalars(select(Attachment).where(Attachment.message_id == message.id).order_by(Attachment.id))).all()
+    text = [message.content] if message.content else []
+    if settings.stt_base_url:
+        for item in attachments:
+            if item.mime.startswith("audio/") and item.transcript is None:
+                item.transcript = await speech.transcribe(settings, item.data, item.mime)
+                await session.commit()
+        text += [item.transcript for item in attachments if item.mime.startswith("audio/") and item.transcript]
+        attachments = [item for item in attachments if not item.mime.startswith("audio/")]
     if not attachments:
-        return {"role": "user", "content": message.content}
-    return {"role": "user", "content": [{"type": "text", "text": message.content}] + [
-        {"type": "image_url", "image_url": {"url": f"data:{item.mime};base64,{base64.b64encode(item.data).decode('ascii')}"}}
-        for item in attachments]}
+        return {"role": "user", "content": "\n\n".join(text)}
+    # Voice-only turns carry no text part: Apertus refuses audio when told about it in text.
+    content = [{"type": "text", "text": "\n\n".join(text)}] if text else []
+    for item in attachments:
+        data = base64.b64encode(item.data).decode("ascii")
+        if item.mime.startswith("audio/"):
+            content.append({"type": "input_audio", "input_audio": {"data": data, "format": "wav"}})
+        else:
+            content.append({"type": "image_url", "image_url": {"url": f"data:{item.mime};base64,{data}"}})
+    return {"role": "user", "content": content}
 
 
 async def cancelled(factory, run_id):
@@ -213,16 +228,16 @@ async def execute_call(factory, settings, run_id, call, definition, server):
 
 
 async def worker(factory, settings, run_id):
-    async with factory() as session:
-        run = await session.get(Run, run_id)
-        conversation = (await session.scalars(select(Conversation).where(Conversation.id == run.conversation_id)
-            .options(selectinload(Conversation.server), selectinload(Conversation.messages)))).one()
-        messages = await history(session, conversation, run.user_message_id)
-        definitions = {tool["name"]: tool for tool in conversation.tools_snapshot if TOOL_NAME.fullmatch(tool.get("name", ""))}
-        tools = tool_definitions(conversation.tools_snapshot)
-        server = conversation.server
     content, reasoning, parts, replay = "", "", [], []
     try:
+        async with factory() as session:
+            run = await session.get(Run, run_id)
+            conversation = (await session.scalars(select(Conversation).where(Conversation.id == run.conversation_id)
+                .options(selectinload(Conversation.server), selectinload(Conversation.messages)))).one()
+            messages = await history(session, conversation, run.user_message_id, settings)
+            definitions = {tool["name"]: tool for tool in conversation.tools_snapshot if TOOL_NAME.fullmatch(tool.get("name", ""))}
+            tools = tool_definitions(conversation.tools_snapshot)
+            server = conversation.server
         if await cancelled(factory, run_id):
             raise asyncio.CancelledError
         await emit(factory, run_id, "run.started", conversation_id=run.conversation_id,
@@ -337,6 +352,9 @@ async def worker(factory, settings, run_id):
         await finish(factory, run_id, "failed", "llm_timeout", "Run timed out.")
     except RateLimitError:
         await finish(factory, run_id, "failed", "llm_rate_limited", "Language model rate limit reached.")
+    except speech.TranscriptionError as exc:
+        LOGGER.error("Run %s transcription failed: %s", run_id, exc)
+        await finish(factory, run_id, "failed", "stt_error", "The voice message could not be transcribed.")
     except Exception as exc:
         LOGGER.error("Run %s failed: exception=%s status=%s frames=%s", run_id, type(exc).__name__,
                      getattr(exc, "status_code", None),

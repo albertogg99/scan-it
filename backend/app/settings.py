@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     public_ai_api_key: str | None = None
     llm_user_agent: str = "SwissDiscover/0.1 (hackathon demo)"
     llm_image_input: Literal["supported", "unsupported", "unknown"] = "unknown"
+    llm_audio_input: Literal["supported", "unsupported", "unknown"] = "unknown"
+    stt_base_url: str | None = None
+    stt_model: str = "whisper-large-v3"
+    stt_api_key: str | None = None
+    stt_timeout_s: int = 60
     oidc_issuer: str = "http://localhost:8080/realms/swiss-discover"
     oidc_jwks_url: str = "http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs"
     oidc_audience: str = "swiss-discover-api"
@@ -29,12 +34,17 @@ class Settings(BaseSettings):
     approval_timeout_s: int = 600
     max_upload_bytes: int = 5242880
     allowed_image_mime: str = "image/png,image/jpeg,image/webp,image/gif"
+    allowed_audio_mime: str = "audio/wav"
     max_message_chars: int = 8000
     use_os_truststore: bool = False
 
     @property
     def api_key(self) -> str | None:
         return self.llm_api_key or self.swisscom_api_key or self.public_ai_api_key
+
+    @property
+    def audio_input(self) -> str:
+        return "supported" if self.stt_base_url else self.llm_audio_input
 
 
 

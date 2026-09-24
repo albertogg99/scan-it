@@ -17,7 +17,12 @@ SWISSCOM_API_KEY=<YOUR-SWISSCOM-KEY>
 LLM_API_KEY=
 PUBLIC_AI_API_KEY=
 LLM_IMAGE_INPUT=supported
+LLM_AUDIO_INPUT=supported
 ```
+
+A manual probe (2026-09-24) on the same Swisscom endpoint confirmed native audio: a spoken 16-bit PCM WAV sent as `{"type": "input_audio", "input_audio": {"data": <base64>, "format": "wav"}}` was understood, also combined with an image and in streaming requests with tools. Voice-only messages are sent as a bare audio part: adding an instruction text such as "[Voice message: listen to the attached audio...]" made Apertus reply that it cannot process audio, while the bare audio part (with the normal system prompt and context) was understood.
+
+In practice Apertus still misheard clean recordings (Whisper transcribed them verbatim), so an optional speech-to-text step is available: set `STT_BASE_URL` (OpenAI-compatible, e.g. vLLM serving `whisper-large-v3`), `STT_MODEL` and optionally `STT_API_KEY`. Voice messages are then transcribed once in the run worker, the transcript is cached on the attachment (`attachments.transcript`, never returned by the API) and sent to the LLM as plain user text. The UI is unchanged: users still see only the audio player. Transcription failures end the run with `stt_error`. Without `STT_BASE_URL`, audio is forwarded natively as `input_audio`. The browser records with `MediaRecorder` and converts to 16 kHz mono WAV before upload (`audio/wav` is the only accepted audio type); `LLM_AUDIO_INPUT` defaults to `unknown` and gates the microphone button and submission (`audio_input_unsupported`).
 
 `LLM_IMAGE_INPUT=supported` is an **optional Swisscom override** justified only by the recorded image probe for that endpoint/model. Leave it `unknown` for an unverified provider: image submission is then rejected, rather than silently attempting an unsupported call. Do not claim reasoning support from the 429 responses. For native backend, set `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY` and, only for that verified Swisscom configuration if desired, `LLM_IMAGE_INPUT=supported` in the backend PowerShell terminal. `SWISSCOM_API_KEY` alone is accepted by the backend, but the probe script reads only `LLM_API_KEY` or `PUBLIC_AI_API_KEY`.
 

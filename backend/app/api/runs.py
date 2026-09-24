@@ -8,7 +8,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.agent import manager
-from app.api.attachments import require_image_input
+from app.api.attachments import require_image_input, require_media_input
 from app.auth.jwt import current_user
 from app.persistence.conversations import owned_conversation
 from app.persistence.models import Attachment, Conversation, Message, Run, RunEvent, ToolCall, new_id, utcnow
@@ -35,15 +35,17 @@ async def owned_run(session, run_id, user_sub):
 async def send_message(conversation_id: str, request: SendMessage, user_sub: str = Depends(current_user),
                        session: AsyncSession = Depends(get_session), settings: Settings = Depends(get_settings)):
     conversation = await owned_conversation(session, conversation_id, user_sub)
-    if not request.text.strip() or len(request.text) > settings.max_message_chars or len(set(request.attachment_ids)) != len(request.attachment_ids):
+    if len(request.text) > settings.max_message_chars or len(set(request.attachment_ids)) != len(request.attachment_ids):
         raise error(422, "message_invalid", "Message or attachments are invalid.")
     if not settings.api_key:
         raise error(503, "llm_not_configured", "Language model is not configured.")
     require_image_input(settings, request.attachment_ids)
     attachments = (await session.scalars(select(Attachment).where(Attachment.id.in_(request.attachment_ids),
         Attachment.user_sub == user_sub, Attachment.conversation_id.is_(None), Attachment.message_id.is_(None)))).all()
-    if len(attachments) != len(request.attachment_ids):
+    voice = any(item.mime.startswith("audio/") for item in attachments)
+    if len(attachments) != len(request.attachment_ids) or not (request.text.strip() or voice):
         raise error(422, "message_invalid", "Message or attachments are invalid.")
+    require_media_input(settings, attachments)
     run_id, user_id, assistant_id = new_id(), new_id(), new_id()
     locked = await session.execute(update(Conversation).where(Conversation.id == conversation_id,
         Conversation.user_sub == user_sub, Conversation.active_run_id.is_(None)).values(active_run_id=run_id))
@@ -61,7 +63,7 @@ async def send_message(conversation_id: str, request: SendMessage, user_sub: str
     for attachment in attachments:
         attachment.conversation_id, attachment.message_id = conversation_id, user_id
     if conversation.title == "New conversation":
-        conversation.title = request.text.strip()[:60]
+        conversation.title = request.text.strip()[:60] or "Voice message"
     await session.commit()
     manager.start(async_sessionmaker(session.bind, expire_on_commit=False), settings, run_id)
     return {"run_id": run_id, "user_message_id": user_id, "assistant_message_id": assistant_id}
