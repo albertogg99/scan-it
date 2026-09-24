@@ -81,29 +81,26 @@
     loading = true; error = ''; sidebar = false;
     void (async () => {
       try {
-        const server = await publicMcp(serverId);
-        if (version !== navigationVersion) return;
-        mcp = server;
         const token = await accessToken();
         if (version !== navigationVersion) return;
         if (!token) { await login(page.url.pathname + page.url.search); return; }
-        const [settings, summaries] = await Promise.all([config ? Promise.resolve(config) : publicConfig(), history()]);
+        const [server, settings, summaries, loaded] = await Promise.all([
+          mcp?.id === serverId ? Promise.resolve(mcp) : publicMcp(serverId),
+          config ? Promise.resolve(config) : publicConfig(),
+          history(),
+          selected ? conversation(selected) : createConversation(serverId)
+        ]);
         if (version !== navigationVersion) return;
-        config = settings; items = summaries;
+        mcp = server; config = settings; items = summaries;
         if (selected) {
-          const loaded = await conversation(selected);
-          if (version !== navigationVersion) return;
           if (loaded.mcp_id !== serverId) { await goto(path(loaded.mcp_id, loaded.id), { replaceState: true }); return; }
           current = loaded;
         } else {
-          const created = await createConversation(serverId);
+          current = loaded;
+          await goto(path(serverId, loaded.id), { replaceState: true, noScroll: true });
           if (version !== navigationVersion) return;
-          current = created;
-          await goto(path(serverId, created.id), { replaceState: true, noScroll: true });
-          if (version !== navigationVersion) return;
-          const summaries = await history();
-          if (version !== navigationVersion) return;
-          items = summaries;
+          void history().then(summaries => { if (version === navigationVersion) items = summaries; })
+            .catch(reason => { if (version === navigationVersion) error = reason instanceof Error ? reason.message : t('error'); });
         }
         if (version !== navigationVersion || !current) return;
         if (current.active_run_id) void reopen(current.active_run_id);

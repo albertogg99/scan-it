@@ -1,5 +1,5 @@
 import { sha256 } from '@noble/hashes/sha256';
-import { KJUR, KEYUTIL, type RSAKey } from 'jsrsasign';
+import type { RSAKey } from 'jsrsasign';
 import { clientId, issuer } from '$lib/config/runtime';
 
 type Tokens = { access_token: string; refresh_token?: string; id_token: string; expires_at: number };
@@ -29,7 +29,7 @@ async function discovery(): Promise<Discovery> {
   return discoveryPromise;
 }
 async function verify(idToken: string, nonce?: string) {
-  const doc = await discovery();
+  const [doc, { KJUR, KEYUTIL }] = await Promise.all([discovery(), import('jsrsasign')]);
   const jwksResponse = await fetch(doc.jwks_uri, { cache: 'no-store' });
   if (!jwksResponse.ok) throw new Error('OIDC keys unavailable');
   const jwks = await jwksResponse.json() as { keys: { kid?: string; kty?: string; use?: string; alg?: string; n?: string; e?: string }[] };
