@@ -2,7 +2,7 @@
   import { onDestroy } from 'svelte';
   import { afterNavigate, goto } from '$app/navigation';
   import { page } from '$app/state';
-  import { Menu, Plus, Trash2, LogOut, Square, ArrowLeft } from 'lucide-svelte';
+  import { PanelLeftClose, PanelLeftOpen, Plus, Trash2, LogOut, Square, ArrowLeft } from 'lucide-svelte';
   import { accessToken, login, logout } from '$lib/auth/session';
   import { cancelRun, conversation, createConversation, deleteConversation, history, publicConfig, publicMcp, sendMessage, upload } from '$lib/api/client';
   import type { Conversation, ConversationSummary, Message, PublicConfig, PublicMcp } from '$lib/api/types';
@@ -25,6 +25,7 @@
   let busy = $state(false);
   let reconnecting = $state(false);
   let sidebar = $state(false);
+  let sidebarCollapsed = $state(false);
   let streamController: AbortController | null = null;
   let navigationVersion = 0;
   const messages = $derived(current ? current.messages.map(message => live && live.assistant.id === message.id ? live.assistant : message) : []);
@@ -135,18 +136,22 @@
   async function cancel() { if (current?.active_run_id) { try { await cancelRun(current.active_run_id); } catch (reason) { error = reason instanceof Error ? reason.message : t('error'); } } }
 </script>
 <div class="workspace">
-  <aside class:shown={sidebar} class="sidebar"><div class="sidebar-title"><strong>{t('history')}</strong><button class="icon" aria-label={t('menu')} title={t('menu')} onclick={() => sidebar = false}><Menu size={18} /></button></div><a class="new-button" href={path(id)}><Plus size={18} />{t('newChat')}</a>
+  <aside id="conversation-sidebar" class:shown={sidebar} class:collapsed={sidebarCollapsed} class="sidebar"><div class="sidebar-title"><strong>{t('history')}</strong><button class="icon" aria-label={t('collapseSidebar')} title={t('collapseSidebar')} aria-controls="conversation-sidebar" onclick={() => { sidebar = false; sidebarCollapsed = true; }}><PanelLeftClose size={18} /></button></div><a class="new-button" href={path(id)}><Plus size={18} />{t('newChat')}</a>
     <nav aria-label={t('history')} use:scrollViewport>{#if items.length === 0}<p class="muted">{t('noHistory')}</p>{/if}{#each items as item}<div class:active={item.id === current?.id} class="history-item"><a href={path(item.mcp_id, item.id)} aria-current={item.id === current?.id ? 'page' : undefined} title={item.title}>{#if item.mcp_id !== id}<small>{item.mcp_title}</small>{/if}<span>{item.title}</span></a><button class="icon" title={t('delete')} aria-label={t('delete')} onclick={() => remove(item.id)}><Trash2 size={16} /></button></div>{/each}</nav><button class="logout" onclick={logout}><LogOut size={17} />{t('logout')}</button>
   </aside>
-  <section class="chat-area"><div class="chat-head"><button class="icon mobile-menu" title={t('menu')} aria-label={t('menu')} onclick={() => sidebar = !sidebar}><Menu size={20} /></button><a class="quiet-link" href="/m/{page.params.id}"><ArrowLeft size={16} /></a><div><strong>Apertus</strong><small>{current?.mcp_title || mcp?.title || t('loading')}</small></div><a class="quiet-link configure-link" href="/m/{current?.mcp_id || page.params.id}/configure">{t('configure')}</a></div>
+  <section class="chat-area"><div class="chat-head"><button class="icon mobile-menu" title={t('expandSidebar')} aria-label={t('expandSidebar')} aria-controls="conversation-sidebar" aria-expanded={sidebar} onclick={() => sidebar = !sidebar}><PanelLeftOpen size={20} /></button>{#if sidebarCollapsed}<button class="icon desktop-menu" title={t('expandSidebar')} aria-label={t('expandSidebar')} aria-controls="conversation-sidebar" aria-expanded="false" onclick={() => sidebarCollapsed = false}><PanelLeftOpen size={20} /></button>{/if}<a class="quiet-link" href="/m/{page.params.id}"><ArrowLeft size={16} /></a><div class="chat-identity"><strong>Apertus</strong><small>{current?.mcp_title || mcp?.title || t('loading')}</small></div><a class="quiet-link configure-link" href="/m/{current?.mcp_id || page.params.id}/configure">{t('configure')}</a></div>
     {#if error}<div class="notice" role="alert">{error} {#if error.includes('Session expired')}<button onclick={() => login(page.url.pathname + page.url.search)}>{t('signInAgain')}</button>{/if}</div>{/if}
     {#if loading}<p class="empty" role="status">{t('loading')}...</p>{:else if current}<Timeline {messages} onChange={() => { void refresh(); }} />{#if busy}<div class="run-controls">{#if reconnecting}<span role="status">{t('network')}</span>{:else}<ThinkingIndicator />{/if}<button onclick={cancel}><Square size={14} />{t('cancel')}</button></div>{/if}<Composer {config} {busy} onSend={send} />{/if}
   </section>
 </div>
 
 <style>
-  .sidebar { background: transparent; border-right: 0; }
-  :global(html[data-theme='dark']) .sidebar { background: transparent; }
+  .sidebar { background: #f0efec; border-right: 1px solid #dedcd7; }
+  :global(html[data-theme='dark']) .sidebar { background: #222221; border-right-color: #383735; }
+  .sidebar-title .icon { display: inline-flex; }
+  .chat-head { flex-wrap: wrap; height: auto; min-height: 64px; }
+  .chat-identity { min-width: 0; overflow-wrap: anywhere; }
+  .configure-link { max-width: 100%; white-space: normal; }
   .sidebar-title strong { font-size: .78rem; color: #888178; }
   .new-button { border: 0; border-radius: 5px; margin: 4px 12px 16px; padding: 10px; }
   .new-button:hover, .history-item:hover { background: rgb(127 127 127 / 7%); }
@@ -164,9 +169,10 @@
   :global(.quiet-scroll.is-scrolling::-webkit-scrollbar-thumb) { background: rgb(127 127 127 / 45%); }
   @media (hover: none) { .history-item .icon { opacity: .6; } }
   @media (max-width: 700px) {
-    .sidebar { background: #faf9f6; }
-    :global(html[data-theme='dark']) .sidebar { background: #191919; }
+    .desktop-menu { display: none; }
+    .sidebar:not(.shown) { visibility: hidden; }
   }
+  @media (min-width: 701px) { .sidebar.collapsed { display: none; } }
   @media (prefers-reduced-motion: reduce) {
     .history-item .icon, :global(.quiet-scroll) { transition: none; }
   }

@@ -102,9 +102,9 @@ services:
       MCP_ALLOWED_HOSTS: zurich-transit,museum-guide,localhost,127.0.0.1
       REGISTRY_SEED_PATH: /app/seed/registry.yaml
       ZURICH_TRANSIT_URL: ${ZURICH_TRANSIT_URL:-http://zurich-transit:8000/mcp}
-      ZURICH_TRANSIT_PUBLIC_URL: ${ZURICH_TRANSIT_PUBLIC_URL:-}
+      ZURICH_TRANSIT_PUBLIC_URL: ${ZURICH_TRANSIT_PUBLIC_URL:-http://${PUBLIC_HOST:-localhost}:8101/mcp}
       MUSEUM_GUIDE_URL: ${MUSEUM_GUIDE_URL:-http://museum-guide:8000/mcp}
-      MUSEUM_GUIDE_PUBLIC_URL: ${MUSEUM_GUIDE_PUBLIC_URL:-}
+      MUSEUM_GUIDE_PUBLIC_URL: ${MUSEUM_GUIDE_PUBLIC_URL:-http://${PUBLIC_HOST:-localhost}:8102/mcp}
       MUSEUM_GUIDE_TOKEN: ${MUSEUM_GUIDE_TOKEN:?Set MUSEUM_GUIDE_TOKEN in .env}
       MAX_TOOL_ROUNDS: "6"
       TOOL_TIMEOUT_S: "20"

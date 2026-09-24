@@ -1,6 +1,7 @@
 const en = {
   explore: 'Explore with Apertus', transit: 'Zurich Transit (demo)', museum: 'Museum Guide (demo)', open: 'Open',
-  chat: 'Local Chat', configure: 'Configure Other', back: 'Back', unavailable: 'Service unavailable', notFound: 'Service not found', retry: 'Retry',
+  chat: 'Local Chat', configure: 'Configure other chatbots', back: 'Back', unavailable: 'Service unavailable', notFound: 'Service not found', retry: 'Retry',
+  collapseSidebar: 'Collapse sidebar', expandSidebar: 'Expand sidebar',
   disconnected: 'This service is not reachable right now.', choose: 'Choose how to connect', publicMissing: 'No public endpoint is configured for this service.',
   publicHttps: 'Cloud clients need a public HTTPS endpoint reachable from their servers. A LAN, localhost, or Docker address will not work.',
   staticAuth: 'This service requires credentials held by this app. They are not shared with external clients. Configure your own access with the server operator.',
@@ -33,5 +34,8 @@ export const locales: Locale[] = ['en', 'de', 'fr', 'it'];
 export function initialLocale(): Locale { const stored = localStorage.getItem('sd.locale') || navigator.language.slice(0, 2); return locales.includes(stored as Locale) ? stored as Locale : 'en'; }
 export function translate(locale: Locale, key: Key) {
   if (key === 'explore') return { en: 'Explore with Apertus', de: 'Mit Apertus entdecken', fr: 'Explorer avec Apertus', it: 'Esplora con Apertus' }[locale];
+  if (key === 'configure') return { en: en.configure, de: 'Andere Chatbots konfigurieren', fr: 'Configurer d autres chatbots', it: 'Configura altri chatbot' }[locale];
+  if (key === 'collapseSidebar') return { en: en.collapseSidebar, de: 'Seitenleiste einklappen', fr: 'Replier la barre laterale', it: 'Comprimi barra laterale' }[locale];
+  if (key === 'expandSidebar') return { en: en.expandSidebar, de: 'Seitenleiste ausklappen', fr: 'Deplier la barre laterale', it: 'Espandi barra laterale' }[locale];
   return ({ en, de, fr, it }[locale][key] || en[key]);
 }

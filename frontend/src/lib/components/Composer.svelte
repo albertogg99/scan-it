@@ -27,8 +27,18 @@
 </script>
 <form class="composer" onsubmit={event => { event.preventDefault(); void submit(); }}>
   {#if preview}<div class="preview"><img src={preview} alt={file?.name || ''} /><button type="button" class="icon" title={t('remove')} aria-label={t('remove')} onclick={remove}><X size={18} /></button></div>{/if}
-  <textarea aria-label={t('message')} placeholder={t('message')} bind:value={text} maxlength="8000" rows="2" disabled={busy} onkeydown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); void submit(); } }}></textarea>
-  <div class="composer-actions"><div>{#if config?.image_input === 'supported'}<input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/gif" bind:this={input} onchange={select} disabled={!config.llm_configured || busy} /><button type="button" class="icon" title={t('upload')} aria-label={t('upload')} disabled={!config.llm_configured || busy} onclick={() => input?.click()}><ImagePlus size={19} /></button>{/if}</div><button class="primary" type="submit" disabled={busy || !text.trim() || !config?.llm_configured}><Send size={17} />{t('send')}</button></div>
+  <div class="message-input">
+    <textarea aria-label={t('message')} placeholder={t('message')} bind:value={text} maxlength="8000" rows="2" disabled={busy} onkeydown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); void submit(); } }}></textarea>
+    <button class="icon send-button" type="submit" title={t('send')} aria-label={t('send')} disabled={busy || !text.trim() || !config?.llm_configured}><Send size={19} /></button>
+  </div>
+  {#if config?.image_input === 'supported'}<div class="composer-actions"><input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/gif" bind:this={input} onchange={select} disabled={!config.llm_configured || busy} /><button type="button" class="icon" title={t('upload')} aria-label={t('upload')} disabled={!config.llm_configured || busy} onclick={() => input?.click()}><ImagePlus size={19} /></button></div>{/if}
   {#if config && !config.llm_configured}<p role="status" class="notice">{t('unavailable')}</p>{/if}
   {#if error}<p role="alert" class="notice">{error}</p>{/if}
 </form>
+
+<style>
+  .message-input { position: relative; }
+  .message-input textarea { display: block; padding-right: 56px; }
+  .send-button { position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; padding: 7px; border-radius: 5px; }
+  .send-button:hover { background: rgb(127 127 127 / 12%); }
+</style>
