@@ -5,18 +5,21 @@
   import ImageAttachment from './ImageAttachment.svelte';
   import Markdown from './Markdown.svelte';
   import { groupParts } from './message-content';
+  import { scrollViewport } from './scroll-viewport';
   import { ui } from '$lib/ui';
   const { t } = ui();
   let { messages, onChange }: { messages: Message[]; onChange: () => void } = $props();
   let deciding = $state<string | null>(null);
   let decisionError = $state('');
+  const lastUserMessage = $derived(messages.filter(message => message.role === 'user').at(-1)?.id);
   async function decision(call: ToolCall, approved: boolean) {
     deciding = call.id; decisionError = '';
     try { await decide(call.id, approved); onChange(); } catch (error) { decisionError = error instanceof Error ? error.message : t('error'); }
     finally { deciding = null; }
   }
 </script>
-<div class="timeline" role="log" aria-live="polite">
+<div class="timeline" role="log" aria-live="polite" use:scrollViewport={{ follow: true, resetKey: lastUserMessage }}>
+  <div class="timeline-content">
   {#if messages.length === 0}<p class="empty">{t('empty')}</p>{/if}
   {#each messages as message (message.id)}
     <article class:user-message={message.role === 'user'} class="message">
@@ -38,6 +41,7 @@
       {#if message.error}<p role="alert" class="notice">{message.error.message}</p>{/if}
     </article>
   {/each}
+  </div>
 </div>
 {#snippet tool(call: ToolCall)}
   <section class="tool-call">
@@ -57,6 +61,7 @@
 {/snippet}
 
 <style>
+  .timeline-content { display: flow-root; }
   .message { min-width: 0; border-bottom: 0; }
   .message + .user-message { margin-top: 20px; }
   .tool-call { margin: 14px 0; }
