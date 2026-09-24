@@ -27,7 +27,7 @@ docker compose down
 
 Compose starts PostgreSQL, Keycloak (realm import), both MCP servers, then runs `alembic upgrade head` and `python -m app.registry.seed` before uvicorn; frontend follows backend health. Open `http://localhost:3000` (or `http://<PUBLIC_HOST>:3000`). Register a user through the Keycloak sign-in screen; the admin login is for Keycloak administration, not a demo user. `docker compose down` preserves the database volume; `down -v` deletes it, including chat history. Docker/real Keycloak/Postgres live E2E is **deferred until the user reboots**; no successful integrated run is implied here.
 
-Host ports: frontend 3000, API 8000, Keycloak 8080, PostgreSQL 5433 on loopback, transit MCP 8101, museum MCP 8102. Keep the first three at their defaults: browser URLs, the Keycloak issuer, realm redirects and CORS use those fixed ports. LAN clients need 3000/8000/8080 reachable through the firewall; `localhost` on a phone is the phone. Keycloak's plain HTTP `start-dev` and static MCP token are only for a trusted local demo, not internet exposure.
+Default host ports: frontend 3000, API 8000, Keycloak 8080, PostgreSQL 5433 on loopback, transit MCP 8101, museum MCP 8102. Compose propagates `FRONTEND_PORT`, `BACKEND_PORT`, and `KEYCLOAK_PORT` into browser URLs, the issuer, CORS, and the initial realm import. Open `http://<PUBLIC_HOST>:<FRONTEND_PORT>` and allow the configured frontend/API/Keycloak ports through the firewall. Changing the frontend port or hostname after the realm exists also requires updating the `swiss-discover-web` client's redirect URIs and web origins in Keycloak; restarting does not reimport an existing realm. `localhost` on a phone is the phone. Keycloak's plain HTTP `start-dev` and static MCP token are only for a trusted local demo, not internet exposure.
 
 ## Windows native (no Docker)
 
@@ -75,6 +75,7 @@ $env:KC_BOOTSTRAP_ADMIN_PASSWORD = '<YOUR-ADMIN-PASSWORD>'
 $env:KC_HOSTNAME = 'http://localhost:8080'
 $env:KC_HOSTNAME_BACKCHANNEL_DYNAMIC = 'true'
 $env:PUBLIC_HOST = 'localhost'
+$env:FRONTEND_PORT = '3000'
 $env:KC_HEALTH_ENABLED = 'true'
 New-Item -ItemType Directory -Force "$env:KC_HOME/data/import" | Out-Null
 Copy-Item keycloak/realm/swiss-discover-realm.json "$env:KC_HOME/data/import/swiss-discover-realm.json"

@@ -20,8 +20,8 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3000/*", "http://${PUBLIC_HOST}:3000/*"],
-      "webOrigins": ["http://localhost:3000", "http://${PUBLIC_HOST}:3000"],
+      "redirectUris": ["http://localhost:${FRONTEND_PORT}/*", "http://${PUBLIC_HOST}:${FRONTEND_PORT}/*"],
+      "webOrigins": ["http://localhost:${FRONTEND_PORT}", "http://${PUBLIC_HOST}:${FRONTEND_PORT}"],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "+"
