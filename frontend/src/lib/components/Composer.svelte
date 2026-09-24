@@ -10,6 +10,13 @@
   let preview = $state('');
   let error = $state('');
   let input = $state<HTMLInputElement>();
+  let textarea = $state<HTMLTextAreaElement>();
+  $effect(() => {
+    void text;
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  });
   function select(event: Event) {
     const selected = (event.currentTarget as HTMLInputElement).files?.[0];
     if (!selected) return;
@@ -28,7 +35,7 @@
 <form class="composer" onsubmit={event => { event.preventDefault(); void submit(); }}>
   {#if preview}<div class="preview"><img src={preview} alt={file?.name || ''} /><button type="button" class="icon" title={t('remove')} aria-label={t('remove')} onclick={remove}><X size={18} /></button></div>{/if}
   <div class="message-input">
-    <textarea aria-label={t('message')} placeholder={t('message')} bind:value={text} maxlength="8000" rows="2" disabled={busy} onkeydown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); void submit(); } }}></textarea>
+    <textarea aria-label={t('message')} placeholder={t('message')} bind:value={text} bind:this={textarea} maxlength="8000" rows="1" disabled={busy} onkeydown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); void submit(); } }}></textarea>
     <button class="icon send-button" type="submit" title={t('send')} aria-label={t('send')} disabled={busy || !text.trim() || !config?.llm_configured}><Send size={19} /></button>
   </div>
   {#if config?.image_input === 'supported'}<div class="composer-actions"><input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/gif" bind:this={input} onchange={select} disabled={!config.llm_configured || busy} /><button type="button" class="icon" title={t('upload')} aria-label={t('upload')} disabled={!config.llm_configured || busy} onclick={() => input?.click()}><ImagePlus size={19} /></button></div>{/if}
@@ -37,8 +44,11 @@
 </form>
 
 <style>
-  .message-input { position: relative; }
-  .message-input textarea { display: block; padding-right: 56px; }
-  .send-button { position: absolute; right: 10px; bottom: 10px; width: 34px; height: 34px; padding: 7px; border-radius: 5px; }
+  .message-input { display: flex; align-items: flex-end; gap: 8px; padding: 8px 8px 8px 16px; border: 1px solid #c6c2bb; border-radius: 14px; transition: border-color .15s; }
+  .message-input:focus-within { border-color: #be272b; }
+  :global(html[data-theme='dark']) .message-input { border-color: #45413d; }
+  :global(html[data-theme='dark']) .message-input:focus-within { border-color: #be272b; }
+  .message-input textarea { flex: 1; display: block; min-height: 0; max-height: min(45vh, 360px); margin: 0; padding: 7px 0; border: 0; border-radius: 0; resize: none; overflow-y: auto; line-height: 1.5; outline: none; }
+  .send-button { flex: none; width: 34px; height: 34px; padding: 7px; border-radius: 8px; }
   .send-button:hover { background: rgb(127 127 127 / 12%); }
 </style>

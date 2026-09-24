@@ -79,6 +79,7 @@ async def test_signed_identity_museum_conversation_and_bounded_replay(api, monke
     forged = {"Authorization": signed[:-8] + ("a" if signed[-8] != "a" else "b") + signed[-7:]}
     assert (await client.get("/api/conversations", headers=forged)).status_code == 401
     assert (await client.get("/api/public/mcps/museum-guide", headers=alice)).status_code == 200
+    assert [item["id"] for item in (await client.get("/api/public/mcps")).json()] == ["museum-guide"]
     created = await client.post("/api/conversations", json={"mcp_id": "museum-guide"}, headers=alice)
     assert created.status_code == 201, created.text
     conversation = created.json()

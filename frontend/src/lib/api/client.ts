@@ -17,6 +17,7 @@ export async function request<T>(path: string, init: RequestInit = {}, auth = tr
   }
   return response.status === 204 ? undefined as T : response.json() as Promise<T>;
 }
+export const publicMcps = () => request<PublicMcp[]>('/api/public/mcps', {}, false);
 export const publicMcp = (id: string) => request<PublicMcp>(`/api/public/mcps/${encodeURIComponent(id)}`, {}, false);
 export const publicHealth = (id: string) => request<{ reachable: boolean; checked_at: string }>(`/api/public/mcps/${encodeURIComponent(id)}/health`, {}, false);
 export const publicConfig = () => request<PublicConfig>('/api/config/public', {}, false);
