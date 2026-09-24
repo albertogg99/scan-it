@@ -1,5 +1,5 @@
 const en = {
-  explore: 'Choose a demo', transit: 'Zurich Transit Live', museum: 'Museum Guide (demo)', open: 'Open',
+  explore: 'Choose a demo', transit: 'Zurich Transit (demo)', museum: 'Museum Guide (demo)', open: 'Open',
   chat: 'Local Chat', configure: 'Configure Other', back: 'Back', unavailable: 'Service unavailable', notFound: 'Service not found', retry: 'Retry',
   disconnected: 'This service is not reachable right now.', choose: 'Choose how to connect', publicMissing: 'No public endpoint is configured for this service.',
   publicHttps: 'Cloud clients need a public HTTPS endpoint reachable from their servers. A LAN, localhost, or Docker address will not work.',

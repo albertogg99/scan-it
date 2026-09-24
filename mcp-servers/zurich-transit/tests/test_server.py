@@ -1,4 +1,4 @@
-import asyncio
+from datetime import datetime, timedelta
 
 import httpx
 import pytest
@@ -8,59 +8,51 @@ import server
 
 
 @pytest.mark.asyncio
-async def test_discovery_prompt_and_live_tool(monkeypatch):
-    calls = []
+async def test_discovery_prompt_and_demo_tools(monkeypatch):
+    async def no_network(*args, **kwargs):
+        raise AssertionError("Transit tools must not use external HTTP")
 
-    async def fake_fetch(path, params):
-        calls.append((path, params))
-        if path == "locations":
-            return {"stations": [{"id": "8503000", "name": "Zürich HB", "coordinate": {"x": 47.378, "y": 8.54}}]}
-        return {"station": {"name": "Zürich HB"}, "stationboard": [
-            {"number": "4", "category": "T", "to": "Altstetten", "stop": {
-                "departure": "2026-09-24T12:00:00+0200", "delay": 2,
-                "prognosis": {"departure": "2026-09-24T12:02:00+0200"}}}
-        ]}
-
-    monkeypatch.setattr(server, "fetch", fake_fetch)
+    monkeypatch.setattr(httpx.AsyncClient, "get", no_network)
     async with Client(server.mcp) as client:
         assert "general_context" in {prompt.name for prompt in await client.list_prompts()}
         prompt = await client.get_prompt("general_context")
-        assert prompt.messages and "unavailable" in prompt.messages[0].content.text
+        assert prompt.messages and "not real-time" in prompt.messages[0].content.text
         tools = {tool.name: tool for tool in await client.list_tools()}
-        assert {"search_stops", "departures"} <= tools.keys()
-        assert all(tool.annotations.readOnlyHint is True for tool in tools.values())
-        stops = (await client.call_tool("search_stops", {"query": "Zürich HB"})).data
-        board = (await client.call_tool("departures", {"stop": "Zürich HB"})).data
+        assert {"search_stops", "departures"} == tools.keys()
+        assert all(tool.annotations.readOnlyHint is True and tool.annotations.openWorldHint is False for tool in tools.values())
+        stops = (await client.call_tool("search_stops", {"query": "zürich", "limit": 2})).data
+        board = (await client.call_tool("departures", {"stop": "zürich hb", "limit": 3})).data
+    assert [stop["name"] for stop in stops["stops"]] == ["Zürich HB", "Zürich Bellevue"]
     assert stops["stops"][0]["id"] == "8503000"
+    assert stops["source"] == board["source"] == "static demo timetable"
     assert stops["retrieved_at"] and board["retrieved_at"]
+    assert board["stop"] == "Zürich HB"
+    assert len(board["departures"]) == 3
+    assert {"line", "category", "destination", "scheduled_departure", "predicted_departure", "delay_minutes", "platform"} == board["departures"][0].keys()
     assert board["departures"][0]["delay_minutes"] == 2
-    assert calls == [("locations", {"query": "Zürich HB", "type": "station"}),
-                     ("stationboard", {"station": "Zürich HB", "limit": 5})]
+    scheduled = datetime.fromisoformat(board["departures"][0]["scheduled_departure"])
+    predicted = datetime.fromisoformat(board["departures"][0]["predicted_departure"])
+    assert predicted - scheduled == timedelta(minutes=2)
+    assert board["departures"][1]["predicted_departure"] is None
 
 
 @pytest.mark.asyncio
-async def test_missing_prompt_and_upstream_timeout(monkeypatch):
-    async def timed_out(path, params):
-        raise httpx.ReadTimeout("upstream timed out")
-
-    monkeypatch.setattr(server, "fetch", timed_out)
+async def test_missing_prompt_and_unknown_stop():
     async with Client(server.mcp) as client:
         with pytest.raises(Exception):
             await client.get_prompt("missing_prompt")
-        result = (await asyncio.wait_for(client.call_tool("departures", {"stop": "Zürich HB"}), timeout=2)).data
-    assert result["status"] == "unavailable"
-    assert "Timeout" in result["message"]
+        result = (await client.call_tool("departures", {"stop": "Unknown"})).data
+        search = (await client.call_tool("search_stops", {"query": "Unknown"})).data
+    assert result["status"] == "not_found" and result["departures"] == []
+    assert search["status"] == "ok" and search["stops"] == []
 
 
 @pytest.mark.asyncio
-async def test_missing_upstream_board_is_not_an_empty_departure_list(monkeypatch):
-    async def malformed_fetch(path, params):
-        return {"unexpected": []}
-
-    monkeypatch.setattr(server, "fetch", malformed_fetch)
+async def test_invalid_input():
     async with Client(server.mcp) as client:
-        result = (await client.call_tool("departures", {"stop": "Zürich HB"})).data
-    assert result["status"] == "unavailable"
+        search = (await client.call_tool("search_stops", {"query": " "})).data
+        board = (await client.call_tool("departures", {"stop": "Zürich HB", "limit": 11})).data
+    assert search["status"] == board["status"] == "invalid_input"
 
 
 @pytest.mark.asyncio

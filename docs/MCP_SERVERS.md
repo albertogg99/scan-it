@@ -23,15 +23,14 @@ port; no Docker check was run here.
 The internal registry URLs are `http://zurich-transit:8000/mcp` and
 `http://museum-guide:8000/mcp`. Health checks should use `/health`, not `/mcp`.
 
-`ZURICH_EXAMPLE_STOPS` is an optional comma-separated list for the transit
-`general_context` prompt (default: Zürich HB, Zürich Bellevue, Zürich
-Stadelhofen; at most 10 examples). Transit tool requests call
-`https://transport.opendata.ch/v1/locations` and `/stationboard` with a
-six-second HTTPX timeout. Tool results include a UTC `retrieved_at` and the
-upstream source; a timeout or upstream failure returns `status: unavailable`
-without invented departures. The retrieval timestamp does not imply the
-upstream schedule was updated at that instant. Both tools are read-only but
-depend on an external service.
+The transit `search_stops` and `departures` tools use only a local sample of
+Zürich HB, Zürich Bellevue, and Zürich Stadelhofen. Routes, delays, platforms,
+and coordinates are demo fixtures; upcoming times are generated locally from
+fixed route templates. They are not actual transit advice. Results retain the
+existing stop and departure fields and include `source: static demo timetable`
+and a UTC `retrieved_at` (the time the demo tool ran, not a data-freshness
+guarantee). An unknown stop returns `not_found` with an empty departure list.
+Neither transit tool calls an external API; both are annotated read-only.
 
 `MUSEUM_GUIDE_TOKEN` is optional. When nonempty, every `/mcp` request requires
 `Authorization: Bearer <token>`; `/health` remains public. Unset or empty

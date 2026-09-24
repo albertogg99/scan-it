@@ -67,8 +67,8 @@ Python: 3.12 in Docker (`python:3.12-slim`); local dev via `uv venv --python 3.1
 ```yaml
 servers:
   - id: zurich-transit
-    title: Zurich Transit Live
-    description: Live departures and stop lookup for Zurich public transport.
+    title: Zurich Transit (demo)
+    description: Fictional stop lookup and sample departures; no live transit data.
     backend_url: ${ZURICH_TRANSIT_URL:-http://zurich-transit:8000/mcp}
     public_url: ${ZURICH_TRANSIT_PUBLIC_URL:-}
     auth: { type: none }

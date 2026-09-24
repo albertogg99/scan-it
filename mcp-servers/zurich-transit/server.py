@@ -1,90 +1,85 @@
-"""Live Zurich transit information from the Swiss public transport API."""
+"""Fictional Zurich transit departures for an offline demo."""
 
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
-import httpx
 from fastmcp import FastMCP
 from mcp.types import ToolAnnotations
 from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 
-mcp = FastMCP("Zurich Transit Live")
-API_URL = "https://transport.opendata.ch/v1"
-REQUEST_TIMEOUT_S = 6.0
+mcp = FastMCP("Zurich Transit (demo)")
+SOURCE = "static demo timetable"
+STOPS = (
+    {"id": "8503000", "name": "Zürich HB", "latitude": 47.378, "longitude": 8.54},
+    {"id": "8581453", "name": "Zürich Bellevue", "latitude": 47.366, "longitude": 8.545},
+    {"id": "8503003", "name": "Zürich Stadelhofen", "latitude": 47.366, "longitude": 8.548},
+)
+ROUTES = {
+    "Zürich HB": (
+        {"line": "4", "category": "T", "destination": "Altstetten", "delay_minutes": 2, "platform": "3"},
+        {"line": "10", "category": "T", "destination": "Zürich Flughafen", "delay_minutes": 0, "platform": "7"},
+    ),
+    "Zürich Bellevue": (
+        {"line": "2", "category": "T", "destination": "Farbhof", "delay_minutes": 0, "platform": "A"},
+        {"line": "5", "category": "T", "destination": "Zürich Flughafen", "delay_minutes": 1, "platform": "B"},
+    ),
+    "Zürich Stadelhofen": (
+        {"line": "S3", "category": "S", "destination": "Zürich HB", "delay_minutes": 0, "platform": "1"},
+        {"line": "S9", "category": "S", "destination": "Uster", "delay_minutes": 3, "platform": "2"},
+    ),
+}
+READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False)
 
 
 def example_stops() -> list[str]:
-    return [stop.strip() for stop in os.getenv("ZURICH_EXAMPLE_STOPS", "Zürich HB,Zürich Bellevue,Zürich Stadelhofen").split(",") if stop.strip()][:10]
-
-
-def unavailable(reason: str) -> dict:
-    return {"status": "unavailable", "source": API_URL, "retrieved_at": datetime.now(timezone.utc).isoformat(), "message": reason}
-
-
-async def fetch(path: str, params: dict) -> dict:
-    async with httpx.AsyncClient(timeout=httpx.Timeout(REQUEST_TIMEOUT_S)) as client:
-        response = await client.get(f"{API_URL}/{path}", params=params)
-        response.raise_for_status()
-        data = response.json()
-        if not isinstance(data, dict):
-            raise ValueError("Unexpected upstream response")
-        return data
+    return [stop["name"] for stop in STOPS]
 
 
 @mcp.prompt(name="general_context")
 def general_context() -> str:
     return (
-        "Zurich Transit Live searches Swiss public transport stops and retrieves departures, "
-        "primarily for the Zurich area. Example stops: " + ", ".join(example_stops()) + ". "
-        "Search and departure tools contact transport.opendata.ch when invoked; they cannot book trips "
-        "or guarantee that a departure will occur. Each result says when it was retrieved in UTC; "
-        "scheduled departure time is not a data-freshness timestamp. When the upstream is unavailable, "
-        "say so and do not invent live departures. Use minutes for delays, local Swiss departure times "
-        "as returned by the provider, and answer in the visitor's language."
+        "Zurich Transit is a fictional offline demo for stop lookup and sample departures. "
+        "Example stops: " + ", ".join(example_stops()) + ". "
+        "No tool contacts a transit provider. Routes, delays, and platforms are invented; "
+        "departure times are generated locally and are not real-time information. "
+        "Never present them as actual travel advice. Answer in the visitor's language."
     )
 
 
-@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=True))
+@mcp.tool(annotations=READ_ONLY)
 async def search_stops(query: str, limit: int = 5) -> dict:
-    """Search Swiss public transport stops by name; use a Zurich stop name for local results."""
+    """Search the fictional demo catalog for Zurich stops by name."""
     if not query.strip() or len(query) > 100 or not 1 <= limit <= 10:
         return {"status": "invalid_input", "message": "Provide a stop query of 1-100 characters and a limit of 1-10."}
-    try:
-        data = await fetch("locations", {"query": query.strip(), "type": "station"})
-        if not isinstance(data.get("stations"), list):
-            raise ValueError("Missing upstream stations")
-        stops = [
-            {"id": stop.get("id"), "name": stop.get("name"), "latitude": (stop.get("coordinate") or {}).get("x"), "longitude": (stop.get("coordinate") or {}).get("y")}
-            for stop in data.get("stations", [])[:limit]
-        ]
-        return {"status": "ok", "source": f"{API_URL}/locations", "retrieved_at": datetime.now(timezone.utc).isoformat(), "stops": stops}
-    except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
-        return unavailable(f"Stop search is unavailable ({type(exc).__name__}).")
+    stops = [stop.copy() for stop in STOPS if query.strip().casefold() in stop["name"].casefold()][:limit]
+    return {"status": "ok", "source": SOURCE, "retrieved_at": datetime.now(timezone.utc).isoformat(), "stops": stops}
 
 
-@mcp.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=True))
+@mcp.tool(annotations=READ_ONLY)
 async def departures(stop: str, limit: int = 5) -> dict:
-    """Get upcoming departures for a named Swiss public transport stop."""
+    """Show locally generated sample departures for a demo Zurich stop."""
     if not stop.strip() or len(stop) > 100 or not 1 <= limit <= 10:
         return {"status": "invalid_input", "message": "Provide a stop name of 1-100 characters and a limit of 1-10."}
-    try:
-        data = await fetch("stationboard", {"station": stop.strip(), "limit": limit})
-        if not isinstance(data.get("stationboard"), list):
-            raise ValueError("Missing upstream stationboard")
-        board = [
-            {"line": entry.get("number"), "category": entry.get("category"), "destination": entry.get("to"),
-             "scheduled_departure": (entry.get("stop") or {}).get("departure"),
-             "predicted_departure": ((entry.get("stop") or {}).get("prognosis") or {}).get("departure"),
-             "delay_minutes": (entry.get("stop") or {}).get("delay"),
-             "platform": (entry.get("stop") or {}).get("platform")}
-            for entry in data.get("stationboard", [])[:limit]
-        ]
-        return {"status": "ok", "source": f"{API_URL}/stationboard", "retrieved_at": datetime.now(timezone.utc).isoformat(),
-                "stop": (data.get("station") or {}).get("name", stop.strip()), "departures": board}
-    except (httpx.HTTPError, ValueError, KeyError, TypeError) as exc:
-        return unavailable(f"Departures are unavailable ({type(exc).__name__}).")
+    matched = next((item for item in STOPS if item["name"].casefold() == stop.strip().casefold()), None)
+    if matched is None:
+        return {"status": "not_found", "source": SOURCE, "retrieved_at": datetime.now(timezone.utc).isoformat(),
+                "stop": stop.strip(), "departures": []}
+
+    now = datetime.now(ZoneInfo("Europe/Zurich"))
+    next_slot = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+    routes = ROUTES[matched["name"]]
+    board = []
+    for index in range(limit):
+        route = routes[index % len(routes)]
+        scheduled = next_slot + timedelta(minutes=5 * index)
+        delay = route["delay_minutes"]
+        board.append({**route, "scheduled_departure": scheduled.isoformat(),
+                      "predicted_departure": (scheduled + timedelta(minutes=delay)).isoformat() if delay else None})
+    return {"status": "ok", "source": SOURCE, "retrieved_at": datetime.now(timezone.utc).isoformat(),
+            "stop": matched["name"], "departures": board}
 
 
 async def health(request):
