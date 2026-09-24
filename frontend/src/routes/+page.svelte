@@ -56,13 +56,13 @@
 </script>
 <svelte:window onkeydown={onGlobalKeydown} />
 <section class="page-wrap">
+  <p class="eyebrow">01 / {t('explore')}</p><h1>{t('explore')}</h1>
   <label class="app-search">
     <Search size={19} strokeWidth={1.5} />
     <span class="sr-only">{t('search')}</span>
     <input bind:this={input} bind:value={query} onkeydown={onKeydown} type="search" placeholder={t('search')} autocomplete="off" spellcheck="false" aria-controls="app-results" />
     {#if query}<button type="button" class="app-search-clear" aria-label={t('clearSearch')} onclick={() => { query = ''; input?.focus(); }}><X size={17} /></button>{:else}<kbd>/</kbd>{/if}
   </label>
-  <p class="eyebrow">01 / {t('explore')}</p><h1>{t('explore')}</h1>
   <div class="demo-list" id="app-results" aria-live="polite">
     {#each ranked as app, index (app.id)}
       {@const Icon = icons[app.id] ?? Blocks}
