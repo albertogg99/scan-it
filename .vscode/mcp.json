@@ -36,6 +36,24 @@
                 "stdio"
             ]
         },
+        "public-transport": {
+            "type": "stdio",
+            "command": "docker",
+            "args": [
+                "compose",
+                "--project-directory",
+                "${workspaceFolder}",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "public-transport",
+                "python",
+                "main.py",
+                "--transport",
+                "stdio"
+            ]
+        },
         "text-demo": {
             "type": "stdio",
             "command": "docker",

@@ -1,0 +1,14 @@
+public_transport:
+  timeout_seconds: 20
+  cache_ttl_seconds: 30
+  requests_per_minute: 45
+  language: en
+  origin:
+    stop_id: "ch:1:sloid:3090"
+    name: "Z\u00fcrich Selnau"
+    latitude: 47.37223834348256
+    longitude: 8.531724954881057
+    venue: Kraftwerk
+    venue_address: "Selnaustrasse 25, 8001 Zurich"
+    source_url: https://data.sbb.ch/explore/dataset/dienststellen-gemass-opentransportdataswiss/
+    venue_source_url: https://kraftwerk.zuerich/

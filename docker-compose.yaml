@@ -41,6 +41,17 @@ services:
     volumes:
       - ./servers/basel-parking:/app/server:ro
 
+  public-transport:
+    <<: *dynamic-mcp
+    ports:
+      - "${PUBLIC_TRANSPORT_PORT:-8560}:8555"
+    environment:
+      <<: *mcp-environment
+      MCP_SERVER_NAME: "Kraftwerk Public Transport"
+      OJP_API_TOKEN: "${OJP_API_TOKEN:-}"
+    volumes:
+      - ./servers/public-transport:/app/server:ro
+
   text-demo:
     <<: *dynamic-mcp
     profiles: [examples]

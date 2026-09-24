@@ -26,6 +26,14 @@ servers/
       __init__.py
       basel_parking.py
       requirements/basel_parking.txt
+  public-transport/              Swiss OJP journeys from a fixed Kraftwerk stop
+    config/
+      tools_config.yaml
+      server_instructions.md
+    tools/
+      __init__.py
+      public_transport.py
+      requirements/public_transport.txt
   text-demo/                    Original slugify example
     config/
       tools_config.yaml
@@ -54,10 +62,19 @@ docker compose up --build -d basel-parking
 docker compose logs -f basel-parking
 ```
 
-The parking endpoint is **http://localhost:8559/mcp**. Both production services
-start when running `docker compose up --build -d` without a service name.
+The parking endpoint is **http://localhost:8559/mcp**. To start public transport,
+configure `OJP_API_TOKEN` as described below, then run:
 
-To run all three bundled servers, including the optional example:
+```bash
+docker compose up --build -d public-transport
+```
+
+The transport endpoint is **http://localhost:8560/mcp**, bound to localhost.
+All three non-example services start with `docker compose up --build -d`.
+The transport server can start without a token, but only its origin tool works
+until a valid token is configured.
+
+To run all four bundled servers, including the optional example:
 
 ```bash
 docker compose --profile examples up --build -d
@@ -66,11 +83,11 @@ docker compose --profile examples up --build -d
 The optional `text-demo` endpoint is **http://localhost:8556/mcp**. It exposes
 `slugify_text`, which converts `Hello Dynamic MCP!` to `hello-dynamic-mcp`.
 
-Set `HACKATHON_PORT`, `BASEL_PARKING_PORT`, and `TEXT_DEMO_PORT` in `.env` to change
-the host ports, or use:
+Set `HACKATHON_PORT`, `BASEL_PARKING_PORT`, `PUBLIC_TRANSPORT_PORT`, and
+`TEXT_DEMO_PORT` in `.env` to change the host ports, or use:
 
 ```bash
-HACKATHON_PORT=8655 BASEL_PARKING_PORT=8659 TEXT_DEMO_PORT=8656 docker compose --profile examples up -d
+HACKATHON_PORT=8655 BASEL_PARKING_PORT=8659 PUBLIC_TRANSPORT_PORT=8660 TEXT_DEMO_PORT=8656 docker compose --profile examples up -d
 ```
 
 All containers listen on port 8555 internally; their host ports must differ.
@@ -184,6 +201,103 @@ Malformed responses and source failures fail explicitly instead of looking like
 empty results or falling back to an expired cache. Settings live in
 `servers/basel-parking/config/tools_config.yaml` and take effect after a restart.
 
+## Public Transport From Kraftwerk
+
+This server uses **OJP 2.0** for nationwide stop search, departure boards, and
+journeys, with predictions and incidents where operators provide them. Backend
+requests are XML POSTs to `https://api.opentransportdata.swiss/ojp20`.
+
+The fixed origin is **Zurich Selnau railway station**, SLOID `ch:1:sloid:3090`,
+near Kraftwerk, not the nearby tram stop "Zurich Selnau, Bahnhof".
+[Kraftwerk](https://kraftwerk.zuerich/) gives its address as
+Selnaustrasse 25, 8001 Zurich; the stop ID and coordinates come from
+[SBB's official stop directory](https://data.sbb.ch/explore/dataset/dienststellen-gemass-opentransportdataswiss/).
+This is a nearby stop, not a claim about the shortest walking route. The app is
+assumed to be at the stop: walking time from the building is not included.
+
+The origin is enforced by Python, not just model instructions. Callers cannot
+override it. To deploy at another stop, edit `origin` in
+`servers/public-transport/config/tools_config.yaml` using verified stop data and
+restart. Locations never follow a caller's changing GPS position.
+
+### Tools And Example Questions
+
+| Tool | Questions it can resolve |
+| --- | --- |
+| `get_transport_origin()` | "Which stop are we using?" / "What is the local date and time?" |
+| `search_transport_stops(query, limit=5)` | "Which stop should I use for Zurich Airport?" / "Find Zurich HB." |
+| `get_departures(at=None, limit=10, force_refresh=False)` | "What leaves here next?" / "Is the next train delayed or cancelled?" / "Which platform?" |
+| `plan_journey(destination_stop_id, at=None, arrive_by=False, limit=3, max_transfers=None, force_refresh=False)` | "How do I get to the airport from here?" / "Can I arrive by 18:00?" / "Can I get there without changing?" |
+
+Search for a destination first, then pass its returned `stop_id` to
+`plan_journey`. Ambiguous stop names require a user choice. Omit `at` to depart
+now. Explicit times need a date and UTC offset, e.g. `2026-09-24T18:00:00+02:00`;
+`arrive_by=True` requires `at`. Use `max_transfers=0` for direct journeys.
+Departures are limited to 20 and journeys to 6; `truncated` signals more results.
+
+Journey responses include public-transport, transfer, and walking legs, duration,
+transfers, and platforms where available. Scheduled and estimated times remain
+separate, with Europe/Zurich display times and delay seconds only where an
+estimate exists. Missing flags and estimates stay unknown. Cancelled, infeasible,
+or unboardable legs are flagged, not silently recommended as usable trips.
+
+Boards and journeys include available `situations` and their validity periods,
+supporting "What reported disruptions affect these services?" This is not a
+complete national alerts feed. No GTFS Static, GTFS Realtime, or GTFS Service
+Alerts ingestion is included; that would require a separate pipeline and matching
+static/real-time IDs. Fares, bookings, arbitrary-address routing, and guaranteed
+wheelchair-accessible journeys are outside this server's scope. Credit
+[OpenStreetMap contributors](https://www.openstreetmap.org/copyright) when using
+the walking-route geography provided by OJP.
+
+### OJP Credentials And Freshness
+
+In the [official API Manager](https://api-manager.opentransportdata.swiss/),
+subscribe an app to **OJP 2.0** and use its **TOKEN**, not its token hash. Set
+`OJP_API_TOKEN=your-token` in the root `.env` (git-ignored), or export it in the
+shell that launches the server. Never commit or paste tokens into chat. A
+shell-only setup that keeps the token out of command history is:
+
+```bash
+read -rsp "OJP token: " OJP_API_TOKEN
+printf '\n'
+export OJP_API_TOKEN
+docker compose up -d --force-recreate public-transport
+```
+
+Compose and the VS Code stdio connection read `.env` automatically. Direct
+`python main.py` launches require an exported variable. Recreate the container
+after changing a token; `docker compose restart` does not reload its environment.
+An exported shell variable takes precedence over `.env` in Compose. Credentials
+are sent only to the fixed HTTPS OJP endpoint and never returned by tools or
+included in their error messages. TLS is verified and redirects are not followed.
+
+Successful responses are cached for 30 seconds in a bounded process-local cache;
+`force_refresh=True` bypasses it. `retrieved_at` is the fetch time and
+`response_timestamp` is OJP's response-generation time, not an individual vehicle
+observation timestamp. Freshness is reevaluated on every call: timestamps older
+than five minutes, future, missing, or invalid are flagged. A fresh response does
+not guarantee real-time coverage for every service.
+
+The client allows 45 uncached requests per minute per process by default, below
+the published 50/minute and 20,000/day allowance. Instances sharing a token share
+the upstream quota; the local limiter does not coordinate them or enforce a daily
+allowance. Authentication failures, rate limits, malformed/unsafe XML, oversized
+responses, and outages return errors, not empty timetables or expired snapshots.
+
+Tests use synthetic OJP fixtures and need no token:
+
+```bash
+python -m unittest discover -s tests -p test_public_transport.py -v
+```
+
+Passing fixture tests is not authenticated live verification. An invalid token
+or missing subscription must be fixed in API Manager before live queries can
+succeed. API contracts used:
+[location search](https://opentransportdata.swiss/en/cookbook/open-journey-planner-ojp-landing-page/ojplocationinformationrequest-2-0/),
+[stop events](https://opentransportdata.swiss/en/cookbook/open-journey-planner-ojp-landing-page/ojpstopeventrequest-2-0/),
+and [journey planning](https://opentransportdata.swiss/en/cookbook/open-journey-planner-ojp-landing-page/ojptriprequest-2-0/).
+
 ## Add Another Server
 
 1. Create `servers/my-server/` with `config/`, `tools/`, and `tools/__init__.py`,
@@ -285,7 +399,7 @@ and restart the server to apply changes, then reconnect clients.
 ```bash
 python3.12 -m venv .venv
 . .venv/bin/activate
-python -m pip install -r requirements.txt -r servers/basel-parking/tools/requirements/basel_parking.txt
+python -m pip install -r requirements.txt -r servers/basel-parking/tools/requirements/basel_parking.txt -r servers/public-transport/tools/requirements/public_transport.txt
 python -m unittest discover -s tests -v
 MCP_HOST=127.0.0.1 MCP_PORT=8557 python main.py --server-dir servers/zurich-hackathon
 ```
@@ -305,8 +419,8 @@ the dependency install directory, which defaults locally to `tool_packages/`
 inside the selected server folder. Docker sets it outside the read-only mount.
 
 Select `.venv` in VS Code. The two debug configurations launch the hackathon on
-port 8557 and the text demo on port 8558. `.vscode/mcp.json` also contains three
-independent Docker/stdio MCP connections, including Basel parking. Run
+port 8557 and the text demo on port 8558. `.vscode/mcp.json` also contains four
+independent Docker/stdio MCP connections, including public transport. Run
 `docker compose build` first, then start the desired MCP connection in VS Code;
 no HTTP container is needed.
 
@@ -320,8 +434,8 @@ no HTTP container is needed.
   untrusted modules or grant tools unnecessary credentials.
 - Startup requires package-index access when enabled modules declare dependencies.
   Packages needing native libraries require customizing the shared Dockerfile.
-- Authentication is not included. HTTP ports bind to localhost only; add an
-  authenticated TLS proxy before exposing them to other machines.
+- MCP endpoint authentication is not included. Keep HTTP ports bound to localhost
+  or add an authenticated TLS proxy before exposing them to other machines.
 - Keep tool output, dependency installation logs, and server logging off stdout
   when using stdio. Use logging or stderr.
 
