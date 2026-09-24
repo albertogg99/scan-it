@@ -15,3 +15,12 @@ servers:
     auth: { type: bearer, credential_env: MUSEUM_GUIDE_TOKEN }
     enabled: true
     approval_policy: ask_destructive
+  - id: zurich-hackathon
+    title: Zurich Hackathon
+    description: Info MCP server for the Zurich AI Hackathon.
+    backend_url: http://10.10.52.203:8655/mcp
+    public_url: http://10.10.52.203:8655/mcp
+    auth: { type: none }
+    enabled: true
+    approval_policy: ask_destructive
+  
