@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { ChevronRight } from 'lucide-svelte';
   import type { Message, ToolCall } from '$lib/api/types';
   import { decide } from '$lib/api/client';
   import ImageAttachment from './ImageAttachment.svelte';
@@ -19,7 +20,7 @@
   {#if messages.length === 0}<p class="empty">{t('empty')}</p>{/if}
   {#each messages as message (message.id)}
     <article class:user-message={message.role === 'user'} class="message">
-      <div class="message-meta">{message.role === 'user' ? t('message') : message.status === 'streaming' ? t('running') : message.status === 'failed' ? t('failed') : message.status === 'cancelled' ? t('cancelled') : ''}</div>
+      <div class="message-meta">{message.role === 'user' ? t('message') : message.status === 'failed' ? t('failed') : message.status === 'cancelled' ? t('cancelled') : ''}</div>
       {#if message.role === 'user'}
         <p class="message-text">{message.content}</p>
       {:else if message.parts?.length}
@@ -39,17 +40,34 @@
   {/each}
 </div>
 {#snippet tool(call: ToolCall)}
-  <section class="tool"><div class="tool-head"><strong>{call.name}</strong><span>{t(call.status === 'pending_approval' ? 'pending' : call.status === 'approved' ? 'approved' : call.status === 'denied' ? 'denied' : call.status === 'running' ? 'running' : call.status === 'succeeded' ? 'succeeded' : 'failed')}</span></div>
-    <details><summary>{t('arguments')}</summary><pre>{call.arguments ? JSON.stringify(call.arguments, null, 2) : call.arguments_raw}</pre></details>
+  <section class="tool-call">
+    <details class="tool-disclosure">
+      <summary><span class="tool-chevron"><ChevronRight size={14} /></span><span>{call.name}</span></summary>
+      <div class="tool-content">
+        <span class="tool-status">{t(call.status === 'pending_approval' ? 'pending' : call.status === 'approved' ? 'approved' : call.status === 'denied' ? 'denied' : call.status === 'running' ? 'running' : call.status === 'succeeded' ? 'succeeded' : 'failed')}</span>
+        <h3>{t('arguments')}</h3><pre>{call.arguments ? JSON.stringify(call.arguments, null, 2) : call.arguments_raw}</pre>
+        {#if call.result !== null}<h3>{t('result')}{call.truncated ? ` / ${t('truncated')}` : ''}</h3><pre>{call.result}</pre>{/if}
+      </div>
+    </details>
     {#if call.status === 'pending_approval'}<div class="approval"><span>{t('approval')}</span><button disabled={deciding === call.id} onclick={() => decision(call, false)}>{t('deny')}</button><button class="primary" disabled={deciding === call.id} onclick={() => decision(call, true)}>{t('approve')}</button></div>{/if}
-    {#if call.result !== null}<details><summary>{t('result')}{call.truncated ? ` / ${t('truncated')}` : ''}</summary><pre>{call.result}</pre></details>{/if}
+    {#if call.status === 'failed' || call.status === 'denied'}<p class="tool-status">{t(call.status)}</p>{/if}
     {#if call.error}<p role="alert">{call.error}</p>{/if}
     {#if decisionError}<p role="alert">{decisionError}</p>{/if}
   </section>
 {/snippet}
 
 <style>
-  .message { min-width: 0; }
+  .message { min-width: 0; border-bottom: 0; }
+  .message + .user-message { margin-top: 20px; }
+  .tool-call { margin: 14px 0; }
+  .tool-disclosure summary { display: flex; align-items: center; gap: 7px; list-style: none; width: fit-content; max-width: 100%; padding: 4px 0; }
+  .tool-disclosure summary::-webkit-details-marker { display: none; }
+  .tool-chevron { display: inline-flex; flex: 0 0 auto; transition: transform 180ms ease; }
+  .tool-disclosure[open] .tool-chevron { transform: rotate(90deg); }
+  .tool-content { padding: 8px 0 4px 21px; }
+  .tool-content h3 { font-size: .78rem; font-weight: 500; margin: 14px 0 4px; }
+  .tool-status { font-size: .75rem; color: #888178; }
+  @media (prefers-reduced-motion: reduce) { .tool-chevron { transition: none; } }
   .message.user-message {
     width: fit-content;
     max-width: 80%;

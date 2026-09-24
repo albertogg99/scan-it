@@ -10,6 +10,7 @@
   import { initialLive, reduceLive, type LiveState } from '$lib/stream/reducer';
   import Timeline from '$lib/components/Timeline.svelte';
   import Composer from '$lib/components/Composer.svelte';
+  import ThinkingIndicator from '$lib/components/ThinkingIndicator.svelte';
   import { ui } from '$lib/ui';
   const { t } = ui();
   const id = $derived(page.params.id ?? '');
@@ -106,6 +107,6 @@
   </aside>
   <section class="chat-area"><div class="chat-head"><button class="icon mobile-menu" title={t('menu')} aria-label={t('menu')} onclick={() => sidebar = !sidebar}><Menu size={20} /></button><a class="quiet-link" href="/m/{page.params.id}"><ArrowLeft size={16} /></a><div><strong>Apertus</strong><small>{current?.mcp_title || mcp?.title || t('loading')}</small></div><a class="quiet-link configure-link" href="/m/{current?.mcp_id || page.params.id}/configure">{t('configure')}</a></div>
     {#if error}<div class="notice" role="alert">{error} {#if error.includes('Session expired')}<button onclick={() => login(page.url.pathname + page.url.search)}>{t('signInAgain')}</button>{/if}</div>{/if}
-    {#if loading}<p class="empty" role="status">{t('loading')}...</p>{:else if current}<Timeline {messages} onChange={() => { void refresh(); }} />{#if busy}<div class="run-controls"><span role="status">{reconnecting ? t('network') : t('running')}</span><button onclick={cancel}><Square size={14} />{t('cancel')}</button></div>{/if}<Composer {config} {busy} onSend={send} />{/if}
+    {#if loading}<p class="empty" role="status">{t('loading')}...</p>{:else if current}<Timeline {messages} onChange={() => { void refresh(); }} />{#if busy}<div class="run-controls">{#if reconnecting}<span role="status">{t('network')}</span>{:else}<ThinkingIndicator />{/if}<button onclick={cancel}><Square size={14} />{t('cancel')}</button></div>{/if}<Composer {config} {busy} onSend={send} />{/if}
   </section>
 </div>
