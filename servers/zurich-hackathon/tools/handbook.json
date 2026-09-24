@@ -1,0 +1,407 @@
+{
+    "snapshot_date": "2026-09-24",
+    "notice": "Bundled offline snapshot of the official Zurich Hackathon 2026 handbook, captured on 2026-09-24. Not live information. Online bookings, submissions, external datasets and media are not included. Ask the organizers about changes or unpublished details.",
+    "topics": {
+        "overview": {
+            "title": "Welcome to Zurich Hackathon 2026",
+            "source_url": "https://zh.ai-weeks.ch/",
+            "content": [
+                "# Welcome to Zurich Hackathon 2026",
+                "Zurich Hackathon is part of Swiss {ai} Weeks and takes place on September 24-25, 2026 at Kraftwerk, Zurich. Doors open on Thursday, September 24 at 08:00. The event is in person and conducted in English.",
+                "## WiFi\nSSID: makeAIright\nPassword: zh.ai-weeks.ch",
+                "Discord is the main help and communication channel. The bundled handbook covers the FAQ, conduct, first aid, arrival, venue map, challenges, Q&A sessions, tools, team formation, checklist, schedule, relaxation, contacts, judging, experts, submission, travel reimbursement and photos."
+            ]
+        },
+        "faq": {
+            "title": "Frequently Asked Questions",
+            "source_url": "https://ai-weeks.ch/2026/hack-zurich",
+            "content": [
+                "# Frequently Asked Questions",
+                "## What is the event?\nA 36-hour, in-person AI hackathon at Kraftwerk Zurich, Selnaustrasse 25, on September 24-25, 2026. It is part of the nationwide Swiss {ai} Weeks series focused on trustworthy, ethical and open AI. Individual hackathons are independent, with shared support, tools and some overlapping challenges. Zurich is a flagship event with international participation; more than half of admitted participants in 2025 came from abroad. The working language is English.",
+                "## Who organizes it?\nSwiss {ai} Weeks was founded in 2025 by the HUB Fellowship Association, a Swiss nonprofit. Supporting partners include the EPFL AI Center, ETH AI Center and Swisscom.",
+                "## What is provided?\nWorkspace, WiFi, power, free food and drinks including coffee, snacks, breakfast, lunch and dinner; technical infrastructure and on-site experts; a goodie bag and T-shirt for hackers and volunteers; relaxation areas, swimming pool access and optional activities. The venue is wheelchair accessible. The organizers aim for at least 40% women/non-binary participants and welcome local and international participants.",
+                "## Who can join and how?\nAnyone aged 16 or over, including developers, designers, strategists, policy thinkers, educators, students and professionals. Registration is through Luma. Entry requires a QR ticket and valid ID. Remote participation is not offered. Individuals can be matched with a team based on skills and interests. Existing teams should register each member separately and provide teammates' full names in the registration notes. Groups of friends, startups and established-company teams can participate.",
+                "## What hours does the FAQ give?\nThe FAQ states September 24 at 08:00 AM CET through September 25 at 09:00 PM CET. The dedicated schedule instead lists the official end as 22:00 on September 25. These are conflicting published statements, not live updates.",
+                "## Are travel and accommodation covered?\nTravel is partly reimbursed after the event with receipts: CHF 80 for 100-500 km and CHF 150 for over 500 km. Accommodation is not covered. See Travel Reimbursement for the caps, exclusions and October 2 deadline.",
+                "## Which challenges can teams choose?\nPartner challenges and a freestyle track for teams' own projects or ideas. Teams choose their challenge. The handbook was scheduled for September 1 publication, with challenge Q&A sessions the week before the event.",
+                "## What are the prizes and judging process?\nThe FAQ promises money and non-purchasable prizes but does not publish a complete 2026 prize list or amounts. Examples from the previous year include presentations to a multinational company's global board, twenty Raspberry Pis and API subscriptions; these are not confirmed 2026 prizes. All teams may pitch to an expert pre-jury. The FAQ says ten teams proceed to the main stage. Judging uses qualitative criteria.",
+                "## Which technology can we use?\nTeams choose their platforms. GitHub and Hugging Face are provided, with additional APIs and tools in Tech Goodies. Venue support includes a 10 Gbit Fiber7 uplink, 220V Type J outlets and on-site technical help. Discord is the communication platform.",
+                "## Key dates in 2026\n- July: registration opens.\n- August 31: registration closes.\n- September 1: challenges published.\n- September 14-18: virtual challenge Q&A sessions.\n- September 24-25: Zurich Hackathon and celebration.",
+                "## Accommodation suggestions\nBudget: Airbnb and Youth Hostel Zurich. Hotels: ibis Zurich City West, Hotel Olympia, 25hours Hotel Zurich, Motel One Zurich, citizenM and easyHotel. Local options: Josephine's Guesthouse for Women, Guesthouse Zollhaus, Guesthouse Kalkbreite, Kafi Schnaps and Zum Guten Gluck. These are suggestions, not bookings or confirmed availability.",
+                "## Who owns the code and intellectual property?\nIn general, intellectual property stays with the teams or individuals who create it, including work on partner challenges. Individual challenge conditions can still affect prize eligibility, such as Public AI's open-source requirement."
+            ],
+            "warnings": [
+                "The FAQ says the event ends at 21:00; Schedule 2026 says 22:00 on September 25.",
+                "The FAQ labels September times CET. Zurich normally observes CEST in September; confirm intended times with the organizers."
+            ]
+        },
+        "event_details": {
+            "title": "Event Details and Registration FAQ",
+            "source_url": "https://ai-weeks.ch/2026/hack-zurich",
+            "content": [
+                "# Event Details and Registration FAQ",
+                "September 24-25, 2026, with 36 hours of hacking at Kraftwerk Zurich, Selnaustrasse 25. The event focuses on trustworthy, ethical and open AI. Participation is in person, in English, and open to people aged 16 or over. Register individually through Luma, even when joining with an existing team. Admission requires a QR ticket and valid photo ID. Individual applicants can be matched to teams.",
+                "The event page lists Apertus, Groupe Mutuel, Public AI, Swiss Life, Swisscom, UBS, Viseca and VZ VermogensZentrum among its partners. This partner list is not the same as the seven published Zurich challenge briefs; no extra challenge is implied for a partner without a brief.",
+                "The FAQ topic contains the full bundled registration, accessibility, equipment, accommodation, awards, technology and intellectual-property information. Registration, booking and submission services themselves are not available through this offline MCP."
+            ],
+            "related_topics": [
+                "faq"
+            ]
+        },
+        "code_of_conduct": {
+            "title": "Code of Conduct",
+            "source_url": "https://zh.ai-weeks.ch/code-of-conduct",
+            "content": [
+                "# Code of Conduct",
+                "Harassment and discrimination are prohibited for all participants, organizers, sponsors, projects and demos. The rules apply in the venue, workshops and associated social events.",
+                "Prohibited behavior includes discriminatory comments about gender, identity or expression, age, sexual orientation, disability, appearance, body size, race, ethnicity, nationality, religion or political views; sexual images in public spaces; intimidation, stalking, unwanted recording, sustained disruption, inappropriate physical contact and unwelcome sexual attention.",
+                "Photography must allow a reasonable opportunity to opt out. Respect requests not to photograph or film someone immediately. Do not take photographs in restrooms or designated resting areas. Sponsors must not use sexualized imagery, activities, promotional material, clothing or costumes that create an exclusionary environment.",
+                "Stop immediately when asked to stop harassing behavior. Organizers may issue warnings, expel participants without a refund or contact law enforcement. For help, approach staff or the Team Container. Staff can help mediate, escort people or contact security. Report online concerns to hello@swiss-ai-weeks.ch."
+            ]
+        },
+        "first_aid": {
+            "title": "First Aid and Security",
+            "source_url": "https://zh.ai-weeks.ch/first-aid-and-security",
+            "content": [
+                "# First Aid and Security",
+                "Medical emergency: call 144. Police: 117. Fire: 118. Follow emergency personnel's instructions.",
+                "For non-urgent first aid, approach an organizer or the Team Container in the middle of the venue, upstairs on the left. Ask organizers about security questions, a small fire already extinguished, outages without immediate danger, suspected crime, a lost person, or help finding a doctor or pharmacy.",
+                "When calling 144, call yourself from a safe place if possible. Explain what happened and give the location: Kraftwerk Zurich, Selnaustrasse 25, 8001 Zurich. Answer the operator's questions, follow instructions and do not hang up until told to do so."
+            ]
+        },
+        "location": {
+            "title": "Location and Arrival",
+            "source_url": "https://zh.ai-weeks.ch/location-and-arrival",
+            "content": [
+                "# Location and Arrival",
+                "Kraftwerk, Selnaustrasse 25, 8001 Zurich, Switzerland, is in a former power plant.",
+                "From Zurich HB: the handbook estimates a 10-15 minute walk south along the Sihl, exiting toward Bahnhofquai / Europaallee, or less than 10 minutes by tram 3 or 14. Look for signs near the venue. These are published estimates, not live routing advice.",
+                "Taxi or Uber drop-off is possible at the entrance. The handbook notes that Uber is often cheaper than street taxis, while walking or taking the tram from HB may be just as fast. There is no parking at the venue. Nearby garages mentioned are Parkhaus Gessnerallee and Parkhaus Urania; availability and prices are not provided.",
+                "Zurich Airport / ZRH / Kloten has frequent connections to Zurich HB. Zurich city is fare zone 110; ensure the appropriate zones are covered for your journey. SBB Mobile and ZVV provide transit information. Buy tickets in the app or at ticket machines, which accept cards and coins but not banknotes. Live connections are not part of this offline snapshot."
+            ]
+        },
+        "venue_map": {
+            "title": "Kraftwerk Space Map",
+            "source_url": "https://zh.ai-weeks.ch/kraftwerk-space-map",
+            "content": [
+                "# Kraftwerk Space Map",
+                "The source supplies the floor plan as an image with an online Canva viewer, not as a textual room directory. The image is not bundled in this text-only MCP. Ask the front desk for the floor plan. The Location and Arrival, Communication Channels and Submit to Expert Jury topics contain the published textual directions."
+            ],
+            "warnings": [
+                "The image-only floor plan is not included. Do not infer room positions from this topic."
+            ],
+            "related_topics": [
+                "location",
+                "communication",
+                "submission"
+            ]
+        },
+        "challenges": {
+            "title": "Challenges Overview",
+            "source_url": "https://zh.ai-weeks.ch/challenges",
+            "content": [
+                "# Challenges Overview",
+                "Seven partner challenges are published:\n- Agent on a Leash: Viseca.\n- AI Support Agent for Operational Service Desks: Swiss Life.\n- Build a public AI service: Public AI / Apertus.\n- Digital Legacy AI: VZ VermogensZentrum.\n- Fighting Identity Fraud in the Age of AI: Swisscom (2).\n- Swiss Grounding MCP: Swisscom (1).\n- Transaction Activity Forecasting: UBS.",
+                "Use get_challenges for the IDs and summaries, and get_challenge for a full bundled brief. The FAQ also mentions a freestyle track, but no separate freestyle challenge brief is published in this snapshot. Teams may change team and challenge until Friday noon."
+            ]
+        },
+        "qa_sessions": {
+            "title": "Q&A Sessions for Hackers",
+            "source_url": "https://zh.ai-weeks.ch/qa-sessions-for-hackers",
+            "content": [
+                "# Q&A Sessions for Hackers",
+                "Technical Q&A sessions before the hackathon introduce experts, challenges and tools. The handbook points to Luma for registration. The published 2026 timetable is:\n- September 15, 15:00: Swiss Life, AI Support Agent for Operational Service Desks.\n- September 16, 13:30: Swisscom, Fighting Identity Fraud in the Age of AI.\n- September 16, 15:00: Swisscom, Swiss Grounding MCP.\n- September 16, 17:00: Viseca, Agent on a Leash.\n- September 17, 13:00: UBS, Transaction Activity Forecasting.\n- September 17, 14:00: VZ, Digital Legacy AI.\n- September 17, 15:00: Public AI, Build a public AI service."
+            ],
+            "warnings": [
+                "The Q&A overview labels these times CET, although Zurich normally observes CEST in September.",
+                "The Swiss Life brief calls September 15 Thursday and the identity-fraud brief calls September 16 Thursday. In 2026 these dates are Tuesday and Wednesday respectively; confirm dates rather than relying on those weekday labels."
+            ]
+        },
+        "tech_goodies": {
+            "title": "Tech Goodies",
+            "source_url": "https://zh.ai-weeks.ch/tools",
+            "content": [
+                "# Tech Goodies",
+                "The hackathon is tool- and model-agnostic, while encouraging participants to try Apertus and give feedback. Individual challenge requirements may be more specific.",
+                "- Swisscom: free API access to Apertus 1.5 70B on the Swiss AI Platform.\n- ElevenLabs: three months of the Creator Plan, including 750 minutes of conversational AI.\n- OpenAI: USD 50 in API credits per participant.\n- Public AI Inference Utility: free serverless AI inference access.\n- Supertext: free text and file translation API access across 28 languages including Swiss German and Romansh, hosted in Switzerland.\n- SRG SSR: API access and an on-site team hacking with participants.\n- LaraCopilot: 70 credits for its AI-powered Laravel development platform covering interfaces, databases, authentication and backend logic.",
+                "The source links separate hacker guides for Swisscom, ElevenLabs, OpenAI, Supertext, SRG SSR and LaraCopilot. Those external setup guides, API credentials, credits and services are not supplied by this offline handbook."
+            ]
+        },
+        "team_building": {
+            "title": "How to Build a Team",
+            "source_url": "https://zh.ai-weeks.ch/how-to-build-a-team",
+            "content": [
+                "# How to Build a Team",
+                "Teams have 3-5 people. Organizers pre-match participants so each team has a table on arrival, using registration information, later direct-message updates, challenge preferences and participant profiles. Teams are not announced beforehand to avoid sharing personal information. You can change teams and challenges until Friday noon.",
+                "Already have a team? List all members when registering in Luma, post the names in Discord's #team-finder channel or send them to Jurg by direct message. To find teammates, post skills or browse groups in #team-finder.",
+                "Participants without a group are matched by profile and challenge interest. Anyone still looking after the reverse pitches, around 10:30 on Thursday, should go to the relaxation area."
+            ]
+        },
+        "checklist": {
+            "title": "Checklist",
+            "source_url": "https://zh.ai-weeks.ch/checklist",
+            "content": [
+                "# Checklist",
+                "Early badge pickup: Tuesday September 22 or Wednesday September 23, 16:00-19:00, Kraftwerk Container K4 / Team Room.",
+                "Required: valid photo ID or passport, emailed ticket QR code, laptop and charger. Swiss outlets are Type J; bring an adapter if needed.",
+                "Essentials: refillable bottle or cup, a change of clothes and toiletries, swimwear and towel for the complimentary pool across the street. Water refill stations are available. The venue stays open 24/7 with bathrooms and a relaxation area but no beds.",
+                "Useful extras: headphones, power bank, spare cables, notebook, pen and personal snacks. Meals and drinks are provided."
+            ]
+        },
+        "schedule": {
+            "title": "Schedule 2026",
+            "source_url": "https://zh.ai-weeks.ch/schedule-2026",
+            "content": [
+                "# Schedule 2026",
+                "Early badge pickup: September 22 and 23, 16:00-19:00, Kraftwerk K4 / Team Room. Event times below are the timetable as published for the Zurich venue, not live updates.",
+                "## Day 1: Thursday, September 24, 2026\n| Time | Event | Location |\n| --- | --- | --- |\n| 08:00 | Doors open, check-in and coffee | Not specified |\n| 09:30-10:30 | Welcome and reverse pitches | Main stage |\n| 10:30 | Hacking officially starts | Not specified |\n| 12:00-13:30 | Lunch | Not specified |\n| 14:00 | Introduction of experts | Main stage |\n| 14:15-17:00 | Expert check-ins | Not specified |\n| 17:45 | Wrap-up and what is next | Main stage |\n| 18:00-20:00 | Dinner and casual networking | Not specified |\n| 20:30-21:45 | Music with Windlereye | Restaurant |\n| Open end | Hacking continues | Not specified |",
+                "## Day 2: Friday, September 25, 2026\n| Time | Event | Location |\n| --- | --- | --- |\n| 07:30-09:00 | Breakfast | Not specified |\n| 09:00 | Official start | Main stage |\n| 09:15-11:00 | Expert check-ins | Not specified |\n| 12:00-13:30 | Lunch | Not specified |\n| 12:00 | Submission to expert jury, all teams | Not specified |\n| 14:00-16:00 | Pitches to expert jury | See submission topic |\n| 17:00 | Jury shortlist announced | Main stage |\n| 17:30 | Final submission to main jury, selected teams | Not specified |\n| 18:00-18:45 | Pitches to main jury | Main stage |\n| 19:30 | Award ceremony and celebration | Main stage |\n| 22:00 | Official end | Not specified |"
+            ],
+            "warnings": [
+                "The event FAQ says 21:00 on September 25, while this schedule says 22:00.",
+                "The Experts page gives availability from 14:00 Thursday and 09:00 Friday; scheduled expert check-ins start at 14:15 and 09:15 respectively."
+            ]
+        },
+        "relax_recharge": {
+            "title": "Relax and Recharge",
+            "source_url": "https://zh.ai-weeks.ch/relax-recharge",
+            "content": [
+                "# Relax and Recharge",
+                "There is a relaxation area for breaks and short naps, but no sleeping facilities or beds are provided. Bring what you need for comfort.",
+                "The indoor swimming pool across the street is available to participants: collect an entry pass at the front desk and bring swimwear and a towel. The source's location illustration is not included in this text snapshot.",
+                "Suggested accommodation: Airbnb, Youth Hostel Zurich, Josephine's, 25hours Hotel at Langstrasse or Zuri West, Motel One, Alma, Pension fur Dich, Zum Guten Gluck, Kafi Schnaps, Hotel Marta, Guesthouse Zollhaus and Guesthouse Kalkbreite. These are suggestions, not confirmed availability or covered expenses."
+            ]
+        },
+        "communication": {
+            "title": "Communication Channels",
+            "source_url": "https://zh.ai-weeks.ch/communication-channels",
+            "content": [
+                "# Communication Channels",
+                "Discord is the main communication channel, including #team-finder and #ask-the-organizers.",
+                "To find organizers on site, the communication page directs participants to the Team Container: in the middle of Kraftwerk, go upstairs one floor and enter K4 on the left.",
+                "Private WhatsApp groups exist for volunteers, experts and organizers. Ask Anna or Jurg for an invitation. The Organizing Team topic lists the team members."
+            ],
+            "warnings": [
+                "The communication and checklist pages identify K4 as the Team Room; the organizing-team page says K3. Confirm the room with staff."
+            ],
+            "related_topics": [
+                "organizers"
+            ]
+        },
+        "organizers": {
+            "title": "Organizing Team",
+            "source_url": "https://zh.ai-weeks.ch/organizing-team",
+            "content": [
+                "# Organizing Team",
+                "- Katka Letzing\n- J\u00fcrg Stuker\n- Anna Hakobyan\n- Blanka Sk\u00e1celov\u00e1\n- Sara Piva\n- Kristina Boichuk",
+                "Organizers can be found around the venue and on Discord. The organizing-team page calls their room K3, while the communication and checklist pages call it K4. Ask staff to confirm."
+            ],
+            "warnings": [
+                "Published Team Room identifiers conflict: K3 on the organizing-team page, K4 on the communication and checklist pages."
+            ]
+        },
+        "judging": {
+            "title": "Jury Process and Evaluation Criteria",
+            "source_url": "https://zh.ai-weeks.ch/jury-process-and-criteria",
+            "content": [
+                "# Jury Process and Evaluation Criteria",
+                "Both rounds take place on Friday, September 25, 2026.\n- Expert jury, all teams: submit by 12:00; pitch 14:00-16:00 across three parallel panels in closed rooms. Four minutes per team: one-minute pitch and three-minute Q&A. Shortlist announced at 17:00.\n- Main jury, selected teams: final submission by 17:30; main-stage pitches 18:00-18:45. Three minutes per team: two-minute pitch and one-minute Q&A. Awards at 19:30.",
+                "The judging page says the expert submission form and main-jury submission email details are to be published. The separate submission topic describes booking one expert-jury slot. Do not invent an unpublished submission address.",
+                "Eligibility: registered teams must submit on time, with every member holding a valid ticket and ID. The jury is independent; decisions are final and cannot be legally appealed. Jurors must declare conflicts and recuse themselves when biased. The moderator has the tie-breaking vote.",
+                "Judging is qualitative; formal quantitative proof is not required. Preferences include clean reproducible code, modern AI approaches, and addressing the chosen challenge objectives.",
+                "Discussion criteria:\n1. Technical Functionality & AI: a working, technically sound, reproducible solution.\n2. User Experience: intuitive, useful and easy to use.\n3. Agentic Depth: autonomous agents handling complex logic.\n4. Originality & Fun Factor: novelty, surprise and creativity.\n5. Potential & Market Impact: relevance, growth beyond the event and fulfillment of challenge objectives where applicable.\nThese guide discussion rather than define a fixed numerical scoring formula; the jury chooses winners at its discretion."
+            ],
+            "related_topics": [
+                "submission"
+            ]
+        },
+        "experts": {
+            "title": "Experts",
+            "source_url": "https://zh.ai-weeks.ch/experts",
+            "content": [
+                "# Experts",
+                "Book through Conversation Starter during the event only, with at most one meeting per expert. Email confirmation and direct contact details follow. Meet at the Expert Area, then choose a place in the venue.",
+                "Published expert availability: Thursday September 24, 14:00-17:00, and Friday September 25, 09:00-11:00. Sessions are at most 15 minutes with no extensions. Bring a specific question, problem or blocker. Ideas and intellectual property remain confidential and yours. General questions and announcements go through Discord."
+            ],
+            "warnings": [
+                "The schedule lists expert check-ins from 14:15 Thursday and 09:15 Friday. This page lists broader availability from 14:00 and 09:00."
+            ]
+        },
+        "submission": {
+            "title": "Submit to Expert Jury",
+            "source_url": "https://zh.ai-weeks.ch/submit-to-expert-jury",
+            "content": [
+                "# Submit to Expert Jury",
+                "Book your expert-jury slot before Friday, September 25 at 12:00. There are three parallel juries: book only one slot in one room, chosen at random.",
+                "Published rooms: Container 3; Relaxation Area (also called Recreation Area in the booking label); Main Entrance / Tower. Booking is through the source's external booking service and cannot be performed by this offline MCP.",
+                "Allow one minute for setup. The pitch itself is one minute, followed by three minutes of Q&A. See Jury Process and Evaluation Criteria for evaluation rules, the 14:00-16:00 expert round, 17:00 shortlist, 17:30 main-jury submission deadline, 18:00-18:45 final pitches and 19:30 awards."
+            ],
+            "related_topics": [
+                "judging"
+            ]
+        },
+        "travel_reimbursement": {
+            "title": "Travel Reimbursement",
+            "source_url": "https://zh.ai-weeks.ch/travel-reimbursement",
+            "content": [
+                "# Travel Reimbursement",
+                "Submit the reimbursement form by October 2, 2026. These are maximum caps based on total travel distance, not automatic payments:\n- Less than 100 km: CHF 0.\n- 100-500 km: up to CHF 80.\n- Over 500 km: up to CHF 150.",
+                "Eligible standard travel includes economy flights, trains, buses and necessary local transit. Business or first class, seat selection and checked baggage fees are excluded. Accommodation is not covered according to the FAQ.",
+                "Upload clear receipts for every expense showing price, date and vendor. Payment is by bank transfer. The actual form and payment processing are external services, not available through the offline MCP."
+            ]
+        },
+        "photos_and_video": {
+            "title": "Pictures and Video",
+            "source_url": "https://zh.ai-weeks.ch/pictures-and-video",
+            "content": [
+                "# Pictures and Video",
+                "Tag @Swiss {ai} Weeks when sharing on social media. Organizers use a shared Google Photos album titled Zurich Hackathon 2026. Contact Jurg to contribute. Photos and videos are not bundled in this text-only snapshot. Respect photography opt-outs and the Code of Conduct."
+            ]
+        }
+    },
+    "challenges": {
+        "agent-on-a-leash": {
+            "title": "Agent on a Leash",
+            "partner": "Viseca",
+            "aliases": [
+                "viseca",
+                "wallet",
+                "wallet control"
+            ],
+            "source_url": "https://zh.ai-weeks.ch/challenges/agent-on-a-leash",
+            "summary": "Build a customer-controlled wallet policy and transaction decision layer for AI shopping agents.",
+            "content": [
+                "# Agent on a Leash\nPartner: Viseca",
+                "## Problem\nAI shopping agents can spend on a customer's behalf, but customers need control over budget, merchants, purchase intent and prompt-injection risks. The task is the wallet control layer, not the shopping agent itself.",
+                "## Objective\nCreate a prototype with an independent, customer-managed wallet policy. The frontend turns customer rules or natural language into executable permissions for spending limits, merchant requirements, time windows and uncertain cases. Customers must be able to tighten, update and revoke policies.",
+                "The backend evaluates proposed transactions and returns approve, decline or ask the customer (step_up). Explain decisions and uncertainty in plain language and support final human approval or rejection. Maintain state for rolling limits, retries, duplicate requests and previous decisions without needlessly blocking ordinary purchases. Treat merchant-provided text as untrusted input.",
+                "## Demonstration and constraints\nUse the supplied synthetic data and simulator; meet the required response deadline and remain predictable if optional models or services fail. The handbook does not specify a numeric latency deadline. Do not hard-code outcomes by scenario name, request ID or sequence position. Demonstrate a low-friction ordinary transaction, a useful intervention for an ambiguous or unsafe transaction, and human approval, rejection or revocation. Make permissions, evidence and reasons understandable to judges.",
+                "## Support and technical preferences\nViseca provides synthetic data, a live transaction API during the event, on-site experts and a pre-event Q&A. Separate the control-policy UI from the backend decision engine so each can integrate and scale independently. The UI is intended for potential integration with the Viseca one app. Prefer smaller low-latency models if models are in the decision path. Rules, behavioral signals, machine learning, language models and interface design can be combined.",
+                "## Materials and partner\nQ&A: September 16, 2026 at 17:00. The source links the Swiss-ai-Weeks/viseca-2026 GitHub repository; its datasets, simulator and live API are not bundled here. Viseca provides payment cards, processing, customer service and fraud prevention, and is owned by Swiss retail and cantonal banks."
+            ]
+        },
+        "ai-support-agent-for-operational-service-desks": {
+            "title": "AI Support Agent for Operational Service Desks",
+            "partner": "Swiss Life",
+            "aliases": [
+                "swisslife",
+                "service desk",
+                "support agent"
+            ],
+            "source_url": "https://zh.ai-weeks.ch/challenges/ai-support-agent-for-operational-service-desks",
+            "summary": "Triage support requests, retrieve knowledge and draft responses while analysts retain approval control.",
+            "content": [
+                "# AI Support Agent for Operational Service Desks\nPartner: Swiss Life",
+                "## Problem\nService desks manually triage tickets, search fragmented documentation and repeatedly write similar replies. Resolution quality and speed vary by analyst.",
+                "## Objective\nBuild an agent that ingests an email or ticket, classifies and prioritizes it, retrieves knowledge and historical resolutions, and drafts a response. A human analyst must be able to approve, edit or reject the recommendation.",
+                "## Support and technical preferences\nSample anonymized or mocked AM Service Desk tickets, example knowledge articles and procedures, domain-owner support and business-process guidance are offered. Suggested technologies are Azure AI, Azure OpenAI, Microsoft Copilot Studio, RAG, Semantic Kernel and workflow orchestration; other suitable stacks are welcome.",
+                "## Outcomes and materials\nPotential measures include time to resolution, classification accuracy and draft acceptance rate. A prototype can use mocked data and may generalize to IT support, client service and other functions. Q&A: September 15, 2026 at 15:00. The source links Swiss-ai-Weeks/SwissLife-2026 on GitHub; external materials are not bundled. Swiss Life works in insurance and pensions and emphasizes responsible, secure and transparent AI."
+            ],
+            "warnings": [
+                "The brief labels September 15 Thursday, but September 15, 2026 is Tuesday. The Q&A overview confirms the date and time without that weekday."
+            ]
+        },
+        "build-a-public-ai-service": {
+            "title": "Build a public AI service",
+            "partner": "Public AI / Apertus",
+            "aliases": [
+                "public ai",
+                "publicai",
+                "apertus",
+                "public ai service"
+            ],
+            "source_url": "https://zh.ai-weeks.ch/challenges/build-a-public-ai-service",
+            "summary": "Build a public-value application or utility feature on Apertus using the Public AI developer API.",
+            "content": [
+                "# Build a public AI service\nPartner: Public AI / Apertus",
+                "## Problem\nPublic AI infrastructure needs civic applications with transparent behavior, data sovereignty and stable terms. Apertus is an open model trained on public compute at CSCS and served by the Public AI Inference Utility; the utility currently offers chat but needs broader applications.",
+                "## Objective\nBuild a working application or utility feature on Apertus through the Public AI developer API. Suggested directions: cantonal or municipal citizen guidance grounded in local language and law; school and library tools; jurisdiction-aware multilingual services including Swiss German and Romansh; user contributions that improve models; or direct contributions to the open-source utility. The Swiss National AI Dialogue's 26 cantonal agents are a reference. Judging emphasizes public value over polish.",
+                "## Support and requirements\nFree developer API keys for Apertus 1.5 with a 260k context window and OpenAI-compatible endpoint, API documentation, the OpenWebUI-fork and LiteLLM-routing codebase, and the Swiss National AI Dialogue architecture are offered. Use Apertus through the Public AI API, with any application stack. Submissions must be open source to qualify for prizes; MIT or Apache 2.0 is preferred.",
+                "## Prize and opportunities\nThe published prize is dinner with the Apertus and Public AI Switzerland team plus a fast track into the contributor community. Strong contributions may be merged and deployed with credit. This is an opportunity, not a guarantee of acceptance.",
+                "## Partner and Q&A\nQ&A with the Apertus team and Public AI: September 17, 2026 at 15:00. Public AI Switzerland is a cooperative connecting CSCS and Apertus with companies, cantons and civil society. The nonprofit utility is supported by Mozilla and the Future of Life Institute, with partners including the Swiss AI Initiative, AI Singapore, AI Sweden and the Barcelona Supercomputing Center. API keys and external services are not bundled here."
+            ]
+        },
+        "digital-legacy-ai": {
+            "title": "Digital Legacy AI",
+            "partner": "VZ Verm\u00f6gensZentrum",
+            "aliases": [
+                "vz",
+                "vermoegenszentrum",
+                "digital estate",
+                "legacy"
+            ],
+            "source_url": "https://zh.ai-weeks.ch/challenges/digital-legacy-ai",
+            "summary": "Discover and maintain a digital-asset inventory, then help executors handle the digital estate.",
+            "content": [
+                "# Digital Legacy AI\nPartner: VZ VermogensZentrum",
+                "## Problem\nPeople accumulate accounts, subscriptions, documents, assets and online identities without a complete inventory. Relatives and estate administrators often do not know what exists or which obligations remain. Discovery through emails, documents, transactions and devices is largely manual.",
+                "## Objective\nBuild an AI Digital Estate Assistant for two phases. During life, discover accounts, assets, subscriptions and obligations from available evidence and maintain an updated inventory. After death, give executors a structured footprint, research provider-specific estate processes, generate communications and document templates, and support execution and tracking of follow-up actions.",
+                "## Support and technical preferences\nEstate-planning experts are available. The partner prefers Swiss-hosted models, preferably on Azure, and is interested in Apertus 1.5. The source links German and French digital-estate flyers; the PDFs are not bundled.",
+                "## Partner and Q&A\nQ&A: September 17, 2026 at 14:00. VZ VermogensZentrum helps clients understand their finances and make long-term decisions. The challenge addresses transparency, security, preparedness and estate administration throughout a person's lifetime."
+            ]
+        },
+        "fighting-identity-fraud-in-the-age-of-ai": {
+            "title": "Fighting Identity Fraud in the Age of AI",
+            "partner": "Swisscom (2)",
+            "aliases": [
+                "swisscom",
+                "swisscom 2",
+                "identity fraud",
+                "deepfakes",
+                "digital trust"
+            ],
+            "source_url": "https://zh.ai-weeks.ch/challenges/fighting-identity-fraud-in-the-age-of-ai",
+            "summary": "Choose one identity-fraud attack vector and demonstrate a usable mitigation and validation approach.",
+            "content": [
+                "# Fighting Identity Fraud in the Age of AI\nPartner: Swisscom (2), Digital Trust",
+                "## Problem\nDeepfakes, forged documents, injection and presentation attacks threaten digital onboarding, account recovery and Qualified Electronic Signatures (QeS). Scalable AI fraud undermines identification and particularly affects vulnerable users, including older people.",
+                "## Objective\nChoose one concrete attack vector, explain its impact, design a technical mitigation with a usable customer experience, and show tests or a validation concept when data is unavailable. Explain how training on internal data could improve the solution.",
+                "## Support and technical preferences\nDigital Trust Unit experts provide feedback on Trust Services and validation. Offered services include e-ID checks, signatures, seals and a validator. Potential approaches include trust or behavioral signals, new MFA methods, risk-based step-up authentication, deepfake/document/video/voice detection, phishing and social-engineering detection, fraud-data orchestration, agentic fraud operations and cross-document checks. Swisscom myAI or Swiss AI Platform access is subject to confirmation, not guaranteed.",
+                "## Partner and Q&A\nQ&A: September 16, 2026 at 13:30. Swisscom Digital Trust provides identification, onboarding, compliant electronic signatures and seals, and scalable trust services. The aim is stronger security without unnecessary user friction."
+            ],
+            "warnings": [
+                "The brief labels September 16 Thursday, but September 16, 2026 is Wednesday. The Q&A overview lists the same date and time without that weekday."
+            ]
+        },
+        "swiss-grounding-mcp": {
+            "title": "Swiss Grounding MCP",
+            "partner": "Swisscom (1)",
+            "aliases": [
+                "swisscom",
+                "swisscom 1",
+                "mcp",
+                "grounding",
+                "myai"
+            ],
+            "source_url": "https://zh.ai-weeks.ch/challenges/swiss-grounding-mcp",
+            "summary": "Build an MCP server that gives AI assistants authoritative public Swiss information with evidence and honest limits.",
+            "content": [
+                "# Swiss Grounding MCP\nPartner: Swisscom (1), myAI team",
+                "## Problem\nSwiss information is spread across federal, cantonal, municipal and institutional sources, languages, websites, APIs, datasets, PDFs, regulations and calendars. Generic search can return an incorrect jurisdiction, old content, commercial summaries or information about another country. Agents need a reusable way to retrieve the right evidence efficiently.",
+                "## Objective\nBuild a working MCP server in a GitHub repository that Swisscom can access and test during the hackathon. Teams choose public sources, coverage, tools and implementation. A focused scope with a credible extension and maintenance plan is valid; nationwide coverage after two days is not required.",
+                "## Evaluation\nAll submissions will connect to the same MCP-compatible AI client and LLM test configuration, potentially an open-source client such as OpenCode. Immediate myAI integration is not required; strong solutions may be considered later. Five dimensions:\n1. Grounding quality: correctness, authoritative sources, jurisdiction, freshness, citations and honest unsupported answers.\n2. Useful Swiss coverage: practical value and breadth within declared coverage.\n3. Agent efficiency: tool selection, number of calls, response size, tokens, latency and avoiding unnecessary live requests.\n4. Operability: reproducible setup, refresh/cache design, resilience, monitoring, source etiquette and maintainability.\n5. Integration readiness: coherent MCP contract, documentation, extensibility and standard-client/test-harness use.",
+                "Automated checks may cover factual grounding, citations, unsupported questions, tool calls, response size, latency and selected freshness behavior. Manual review assesses architecture, coverage, operability and artifact quality. Confidential data, production prompts, the myAI system prompt and a myAI sandbox are not required.",
+                "## Delivery and access\nPublic or private GitHub repositories are acceptable. Give Swisscom evaluators download/test access if private. Document setup, coverage and limitations. Provide necessary test credentials through a secure channel, never committed secrets. Public release under a reusable license is encouraged, not mandatory, and may occur during or after the event.",
+                "## Support and purpose\nSwisscom experts attend the event. Q&A: September 16, 2026 at 15:00. The source links Swiss-ai-Weeks/swisscom-2026 on GitHub; those external materials are not bundled. The challenge comes from Swisscom's myAI team and aims for reusable Swiss grounding, potential later integration, better public-information answers and support for Swiss digital sovereignty."
+            ]
+        },
+        "transaction-activity-forecasting": {
+            "title": "Transaction Activity Forecasting",
+            "partner": "UBS",
+            "aliases": [
+                "ubs",
+                "transactions",
+                "forecasting"
+            ],
+            "source_url": "https://zh.ai-weeks.ch/challenges/transaction-activity-forecasting",
+            "summary": "Predict a client's next recurring transaction from synthetic historical banking activity.",
+            "content": [
+                "# Transaction Activity Forecasting\nPartner: UBS",
+                "## Problem\nBank histories mix one-off activity with recurring salaries, subscriptions, bills, loan repayments, card payments, transfers and cash withdrawals. Anticipating recurring activity can help financial planning, timely payments, personalized alerts and detection of unusual behavior.",
+                "## Objective\nBuild an AI pipeline to predict the next recurring transaction from historical activity. Find recurring patterns using temporal, behavioral and merchant signals; explore feature engineering, sequence representations and recurrence detection; compare modeling methods with suitable forecasting metrics; and explain strengths, limitations, interpretability and insights. Models should generalize across diverse behavior in noisy histories.",
+                "## Data and support\nUBS supplies synthetic transaction data, a short data dictionary, a minimal baseline and mentors. Each record includes timing, transaction type, amount, merchant category and description. The source links Swiss-ai-Weeks/ubs-2026 on GitHub; the dataset and code are not bundled with this offline handbook.",
+                "## Technical preferences and Q&A\nUse common programming languages and AI tools; any appropriate modeling method is welcome. Keep setup and results reproducible and avoid unnecessary complexity. Q&A: September 17, 2026 at 13:00. UBS seeks practical, responsible AI applications that turn transaction data into useful banking insights."
+            ]
+        }
+    }
+}

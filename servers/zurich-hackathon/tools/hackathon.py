@@ -1,132 +1,28 @@
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
 import json
+from pathlib import Path
 import re
-import ssl
-import time
-from urllib.parse import urljoin, urlsplit
+import unicodedata
 
-from bs4 import BeautifulSoup
-import httpx
-from markdownify import markdownify
 from mcp.server.mcpserver.exceptions import ToolError
 
 
-def strip_web_urls(text: str) -> str:
-    return re.sub(r"(?i)\b(?:https?://|www\.)[^\s<>\[\]()*`\"']+", "", text).strip()
-
-
-def extract_embedded_faq(soup: BeautifulSoup) -> str:
-    chunks = []
-    prefix = "self.__next_f.push("
-    decoder = json.JSONDecoder()
-    for script in soup.find_all("script"):
-        text = script.get_text().strip()
-        if not text.startswith(prefix):
-            continue
-        try:
-            payload, _ = decoder.raw_decode(text[len(prefix):])
-        except json.JSONDecodeError:
-            continue
-        if isinstance(payload, list) and len(payload) > 1 and payload[0] == 1 and isinstance(payload[1], str):
-            chunks.append(payload[1])
-    records = {}
-    for line in "".join(chunks).splitlines():
-        record_id, separator, value = line.partition(":")
-        if separator:
-            try:
-                records[record_id] = json.loads(value)
-            except json.JSONDecodeError:
-                continue
-
-    def render(node, active: set[str]) -> str:
-        if isinstance(node, str):
-            if node.startswith("$$"):
-                return node[1:]
-            if node.startswith("$"):
-                record_id = node[2:] if node.startswith("$L") else node[1:]
-                if record_id in active:
-                    return ""
-                return render(records.get(record_id), active | {record_id})
-            return node
-        if isinstance(node, list):
-            if len(node) == 4 and node[0] == "$" and isinstance(node[3], dict):
-                text = render(node[3].get("children"), active)
-                return text if node[1] in ("a", "span", "strong", "em", "b", "i") else text + "\n\n"
-            return "".join(render(child, active) for child in node)
-        return ""
-
-    for record_id, node in records.items():
-        if isinstance(node, list) and len(node) == 4 and node[0] == "$" and node[1] == "section":
-            text = render(node, {record_id}).strip()
-            if text.partition("\n")[0] == "FAQ":
-                return text
-    return ""
-
-
-def extract_content(html: str, source_url: str) -> str:
-    soup = BeautifulSoup(html, "html.parser")
-    content = soup.find("main") or soup.find("article")
-    if content is None:
-        raise ValueError("No readable handbook content found")
-    for heading in content.find_all("h2"):
-        if heading.get_text(strip=True) == "FAQ":
-            faq = extract_embedded_faq(soup)
-            if faq and heading.parent is not None:
-                section = soup.new_tag("section")
-                for paragraph in faq.split("\n\n"):
-                    if paragraph.strip():
-                        block = soup.new_tag("h2" if paragraph.strip() == "FAQ" else "p")
-                        block.string = paragraph.strip()
-                        section.append(block)
-                heading.parent.replace_with(section)
-            break
-    for element in content.select(
-        "script, style, nav, footer, noscript, svg, template, form, iframe, object, embed"
-    ):
-        element.decompose()
-    for button in content.find_all("button"):
-        button.unwrap()
-    for link in content.find_all("a"):
-        label = link.get_text(" ", strip=True)
-        destination = urlsplit(urljoin(source_url, str(link.get("href", ""))))
-        if label.rstrip("/") == destination.netloc + destination.path.rstrip("/") or re.fullmatch(
-            r"(?i)(?:[a-z0-9-]+\.)+[a-z]{2,}(?:[/:?#]\S*)?", label
-        ):
-            link.decompose()
-        else:
-            link.replace_with(strip_web_urls(label))
-    for image in content.find_all("img"):
-        image.replace_with(str(image.get("alt", "")))
-    text = strip_web_urls(markdownify(str(content), heading_style="ATX"))
-    if not text:
-        raise ValueError("No readable handbook content found")
-    return text
-
-
-def describe_fetch_error(error: Exception) -> str:
-    if isinstance(error, httpx.HTTPStatusError):
-        return f"The handbook returned HTTP {error.response.status_code}."
-    if isinstance(error, httpx.TimeoutException):
-        return "The handbook request timed out. Try again later."
-    if isinstance(error, httpx.HTTPError):
-        return "Could not connect to the handbook. Check the MCP server's network and TLS configuration."
-    return strip_web_urls(str(error))
+def normalize_challenge(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value.casefold())
+    return re.sub(r"[^a-z0-9]+", " ", normalized.encode("ascii", "ignore").decode()).strip()
 
 
 class Handbook:
     def __init__(self, config: dict):
-        self.pages = config["pages"]
-        self.timeout = float(config.get("timeout_seconds", 15))
-        self.cache_ttl = float(config.get("cache_ttl_seconds", 300))
-        self.ssl_context = ssl.create_default_context()
-        self.cache: dict[str, tuple[float, dict]] = {}
-        if not self.pages or self.timeout <= 0 or self.cache_ttl < 0:
-            raise ValueError("Handbook pages, a positive timeout, and a nonnegative cache TTL are required")
-        for page in self.pages.values():
-            parsed = urlsplit(page["url"])
-            if parsed.scheme != "https" or parsed.netloc not in {"zh.ai-weeks.ch", "ai-weeks.ch"}:
-                raise ValueError(f"Only official AI Weeks HTTPS pages are allowed: {page['url']}")
+        data = json.loads(Path(__file__).with_name("handbook.json").read_text(encoding="utf-8"))
+        self.snapshot_date = data["snapshot_date"]
+        self.notice = data["notice"]
+        self.pages = data["topics"]
+        self.challenges = data["challenges"]
+        for challenge_id, challenge in self.challenges.items():
+            self.pages[f"challenge/{challenge_id}"] = challenge
+
+    def metadata(self) -> dict:
+        return {"offline": True, "snapshot_date": self.snapshot_date, "notice": self.notice}
 
     def topics(self) -> list[dict]:
         return [
@@ -137,29 +33,52 @@ class Handbook:
     def read(self, topic: str, force_refresh: bool = False) -> dict:
         if topic not in self.pages:
             raise ValueError("Unknown topic. Use list_hackathon_topics to find valid topics.")
-        cached = self.cache.get(topic)
-        if not force_refresh and cached is not None and time.monotonic() < cached[0]:
-            return {**cached[1], "cached": True}
         page = self.pages[topic]
-        response = httpx.get(
-            page["url"],
-            timeout=self.timeout,
-            follow_redirects=False,
-            verify=self.ssl_context,
-            headers={"User-Agent": "DynamicMCP-Hackathon/1.0", "Accept": "text/html"},
-        )
-        response.raise_for_status()
-        content_type = response.headers.get("content-type", "").split(";")[0].strip().lower()
-        if content_type not in {"text/html", "application/xhtml+xml"}:
-            raise ValueError("Expected an HTML handbook page")
-        result = {
+        return {
+            **self.metadata(),
             "topic": topic,
             "title": page["title"],
-            "fetched_at": datetime.now(timezone.utc).isoformat(),
-            "content": extract_content(response.text, page["url"]),
+            "content": "\n\n".join(page["content"]),
+            "warnings": list(page.get("warnings", [])),
+            "related_topics": list(page.get("related_topics", [])),
         }
-        self.cache[topic] = (time.monotonic() + self.cache_ttl, result)
-        return {**result, "cached": False}
+
+    def list_challenges(self) -> dict:
+        return {
+            **self.metadata(),
+            "challenges": [
+                {"id": challenge_id, "title": challenge["title"],
+                 "partner": challenge["partner"], "summary": challenge["summary"]}
+                for challenge_id, challenge in self.challenges.items()
+            ],
+        }
+
+    def challenge(self, query: str) -> dict:
+        normalized = normalize_challenge(query)
+        if not normalized:
+            raise ValueError("Provide a challenge name, ID or partner. Use get_challenges to list them.")
+        exact = []
+        partial = []
+        for challenge_id, challenge in self.challenges.items():
+            names = [normalize_challenge(value) for value in (
+                challenge_id, challenge["title"], challenge["partner"], *challenge["aliases"],
+            )]
+            if normalized in names:
+                exact.append(challenge_id)
+            elif any(normalized in name for name in names):
+                partial.append(challenge_id)
+        matches = exact or partial
+        if not matches:
+            raise ValueError("Unknown challenge. Use get_challenges to find valid names and IDs.")
+        if len(matches) > 1:
+            raise ValueError(f"Multiple challenges match: {', '.join(matches)}. Choose a specific ID.")
+        challenge_id = matches[0]
+        return {
+            **self.read(f"challenge/{challenge_id}"),
+            "id": challenge_id,
+            "partner": self.challenges[challenge_id]["partner"],
+            "summary": self.challenges[challenge_id]["summary"],
+        }
 
     def search(self, query: str, limit: int = 5) -> dict:
         terms = query.casefold().split()
@@ -167,41 +86,30 @@ class Handbook:
             raise ValueError("Provide at least one search word")
         if not 1 <= limit <= 20:
             raise ValueError("limit must be between 1 and 20")
-
-        def read_topic(topic: str) -> tuple[dict | None, dict | None]:
-            try:
-                return self.read(topic), None
-            except (httpx.HTTPError, ValueError) as error:
-                return None, {"topic": topic, "error": describe_fetch_error(error)}
-
         matches = []
-        errors = []
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            for page, error in executor.map(read_topic, self.pages):
-                if error is not None:
-                    errors.append(error)
-                if page is None:
-                    continue
-                title = page["title"].casefold()
-                content = page["content"].casefold()
-                if not all(term in f"{title}\n{content}" for term in terms):
-                    continue
-                position = max(0, content.find(terms[0]) - 120)
-                matches.append({
-                    "topic": page["topic"],
-                    "title": page["title"],
-                    "fetched_at": page["fetched_at"],
-                    "snippet": page["content"][position:position + 600],
-                    "score": sum(content.count(term) + 5 * title.count(term) for term in terms),
-                })
+        for topic in self.pages:
+            page = self.read(topic)
+            title = page["title"].casefold()
+            content = page["content"].casefold()
+            if not all(term in f"{title}\n{content}" for term in terms):
+                continue
+            position = max(0, content.find(terms[0]) - 120)
+            matches.append({
+                "topic": topic,
+                "title": page["title"],
+                "snapshot_date": self.snapshot_date,
+                "snippet": page["content"][position:position + 600],
+                "score": sum(content.count(term) + 5 * title.count(term) for term in terms),
+            })
         matches.sort(key=lambda match: (-match["score"], match["topic"]))
         return {
+            **self.metadata(),
             "query": query,
             "matches": matches[:limit],
             "total_matches": len(matches),
             "searched_topics": len(self.pages),
-            "complete": not errors,
-            "errors": errors,
+            "complete": True,
+            "errors": [],
         }
 
 
@@ -210,7 +118,7 @@ def register(mcp, config: dict):
 
     @mcp.tool(
         name="list_hackathon_topics",
-        description="List available Zurich Hackathon topic IDs and titles. Read them using get_hackathon_info.",
+        description="List all bundled Zurich Hackathon topics and challenge briefs. Everything is available offline.",
     )
     def list_hackathon_topics() -> list[dict]:
         return handbook.topics()
@@ -218,22 +126,22 @@ def register(mcp, config: dict):
     @mcp.tool(
         name="get_hackathon_info",
         description=(
-            "Get Zurich Hackathon information fetched by the server, with full text and fetch time, "
-            "not links for the client to browse. Use list_hackathon_topics for topic IDs. "
-            "Set force_refresh to bypass the short-lived cache."
+            "Read a bundled Zurich Hackathon topic, including its snapshot date and any source conflicts. "
+            "Use list_hackathon_topics for IDs. force_refresh is retained for compatibility but is ignored: "
+            "this server never fetches from the internet."
         ),
     )
     def get_hackathon_info(topic: str = "overview", force_refresh: bool = False) -> dict:
         try:
             return handbook.read(topic, force_refresh)
-        except (httpx.HTTPError, ValueError) as error:
-            raise ToolError(describe_fetch_error(error)) from error
+        except ValueError as error:
+            raise ToolError(str(error)) from error
 
     @mcp.tool(
         name="search_hackathon_info",
         description=(
-            "Search official Zurich Hackathon pages for all query words, ignoring case. "
-            "Returns ranked excerpts and retrieval errors; read matching topics for complete details."
+            "Search the offline Zurich Hackathon handbook and challenge briefs for all query words, "
+            "ignoring case. Returns ranked excerpts; read matching topics for full context and warnings."
         ),
     )
     def search_hackathon_info(query: str, limit: int = 5) -> dict:
@@ -241,3 +149,45 @@ def register(mcp, config: dict):
             return handbook.search(query, limit)
         except ValueError as error:
             raise ToolError(str(error)) from error
+
+    @mcp.tool(
+        name="get_challenges",
+        description="List the seven Zurich Hackathon challenges with IDs, partners and short summaries, offline.",
+    )
+    def get_challenges() -> dict:
+        return handbook.list_challenges()
+
+    @mcp.tool(
+        name="get_challenge",
+        description=(
+            "Get a full offline challenge brief: objectives, support, constraints and evaluation details. "
+            "Accepts an ID, title or partner, e.g. 'swiss-grounding-mcp', 'Viseca', 'Apertus' or 'Swisscom (1)'. "
+            "Ambiguous names return the matching IDs instead of guessing."
+        ),
+    )
+    def get_challenge(challenge: str) -> dict:
+        try:
+            return handbook.challenge(challenge)
+        except ValueError as error:
+            raise ToolError(str(error)) from error
+
+    def register_topic_tool(name: str, topic: str, description: str):
+        @mcp.tool(name=name, description=description + " Uses the bundled offline snapshot, not live data.")
+        def get_topic() -> dict:
+            return handbook.read(topic)
+
+    for name, (topic, description) in {
+        "get_event_info": ("overview", "Get event dates, venue, opening time and WiFi access."),
+        "get_schedule": ("schedule", "Get the full two-day schedule, badge pickup and submission deadlines."),
+        "get_location": ("location", "Get the venue address, arrival directions, transit and parking information."),
+        "get_faq": ("faq", "Get answers about participation, registration, accessibility, prizes and ownership."),
+        "get_checklist": ("checklist", "Get what to bring and how to prepare for check-in."),
+        "get_team_info": ("team_building", "Get team size, matching rules and how to find teammates."),
+        "get_judging_criteria": ("judging", "Get judging criteria, pitch formats, jury rules and deadlines."),
+        "get_submission_info": ("submission", "Get expert-jury submission timing, pitch length and rooms."),
+        "get_contacts": ("communication", "Find organizers on site and the official communication channels."),
+        "get_tech_goodies": ("tech_goodies", "Get the offered APIs, credits, models and technical resources."),
+        "get_travel_reimbursement": ("travel_reimbursement", "Get travel reimbursement caps, rules and deadline."),
+        "get_first_aid": ("first_aid", "Get emergency numbers and where to find first aid at Kraftwerk."),
+    }.items():
+        register_topic_tool(name, topic, description)

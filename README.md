@@ -10,14 +10,14 @@ main.py                         Shared startup and tool loader
 Dockerfile                      Server-independent base image
 docker-compose.yaml             One service per server
 servers/
-  zurich-hackathon/              Live Zurich Hackathon handbook
+  zurich-hackathon/              Offline Zurich Hackathon handbook
     config/
       tools_config.yaml
       server_instructions.md
     tools/
       __init__.py
       hackathon.py
-      requirements/hackathon.txt
+      handbook.json
   basel-parking/                 Live Basel-Stadt parking availability
     config/
       tools_config.yaml
@@ -83,41 +83,75 @@ project. The old top-level tools and configuration now live in `servers/text-dem
 
 ## Zurich Hackathon Information
 
-The first server uses the official participant handbook at
-https://zh.ai-weeks.ch/. It exposes three tools:
+The Zurich server uses a **bundled offline snapshot dated September 24, 2026**
+of the official participant handbook and challenge briefs. All data is stored in
+[servers/zurich-hackathon/tools/handbook.json](servers/zurich-hackathon/tools/handbook.json)
+and loaded at startup. Tools never make network requests, including on first use.
+The module has no additional dependencies, so startup does not invoke pip.
+
+Simple tools make it easy to demo without discovering topic IDs first:
 
 | Tool | Purpose |
 | --- | --- |
-| `list_hackathon_topics()` | List configured topic IDs and titles without a network request. |
-| `get_hackathon_info(topic="overview", force_refresh=False)` | Return topic text and tables fetched by the server, with UTC fetch time and no website links. |
-| `search_hackathon_info(query, limit=5)` | Search page titles and content for all query words, ignoring case; return ranked excerpts. |
+| `get_event_info()` | Event dates, venue, opening time and WiFi. |
+| `get_schedule()` | Full two-day timetable, early badge pickup and deadlines. |
+| `get_challenges()` | Seven challenge IDs, partners and short summaries. |
+| `get_challenge(challenge)` | Detailed brief by ID, title, partner or an unambiguous partial name. |
+| `get_location()` | Venue address, arrival, transit and parking information. |
+| `get_faq()` | Participation, accessibility, registration, prizes and ownership. |
+| `get_checklist()` | What to bring and check-in preparation. |
+| `get_team_info()` | Team size, matching and finding teammates. |
+| `get_judging_criteria()` | Evaluation criteria, pitch formats and jury rules. |
+| `get_submission_info()` | Expert-jury deadline, pitch timing and rooms. |
+| `get_contacts()` | Communication channels and finding organizers on site. |
+| `get_tech_goodies()` | Offered models, APIs, credits and technical resources. |
+| `get_travel_reimbursement()` | Expense caps, eligibility and submission deadline. |
+| `get_first_aid()` | Emergency numbers and first-aid location. |
 
-The 21 topics cover updates, FAQs, location, the venue map, challenges, team
-building, schedules, judging, submissions, support, travel reimbursement, and
-other handbook sections. The FAQ topic reads the main event page directly,
-including answers embedded in the page data rather than visible static HTML.
-Use the listing tool for topic IDs, then read a matching topic for full details.
+Example tool calls for a demo:
 
-Source URLs stay in server configuration, not tool responses. The server removes
-hyperlink destinations, image URLs, and raw web URLs from extracted content and
-does not expose request URLs in errors. Link labels and image descriptions are
-retained as text; clients use the MCP tools rather than browsing to read more.
-Images, videos, and external forms themselves are not returned as text.
+```python
+get_schedule()
+get_challenges()
+get_challenge("Swisscom (1)")
+get_challenge("Viseca")
+get_location()
+```
 
-Information is fetched from the official pages on demand, not copied into a
-static event snapshot. Successful reads are cached in memory for five minutes;
-`force_refresh=True` bypasses the cache. Fetch time is not the site's last-update
-time. Search fetches pages with up to four concurrent requests and reports any
-failures in `errors`, with `complete=False`; an unavailable page is not treated
-as evidence that information does not exist. Reads fail explicitly if a site is
-unavailable or its HTML is not readable. Internet access and working TLS trust
-are required on the MCP server, not on the client for reading the source pages.
+Challenge lookup ignores case, accents and separators. For example,
+`get_challenge("swiss-grounding-mcp")` and `get_challenge("MCP")` select the same
+brief. `get_challenge("Swisscom")` reports both matching IDs rather than choosing
+one silently. Empty or unknown queries return an actionable tool error.
 
-Edit `servers/zurich-hackathon/config/tools_config.yaml` to maintain the topic
-catalog, timeout, and cache lifetime. URLs must be HTTPS on the official AI Weeks
-domains. Callers select a configured topic rather than supplying arbitrary URLs;
-HTTP redirects are not followed. HTTPS uses the system CA store with certificate
-verification enabled.
+The original tools remain available:
+
+| Tool | Purpose |
+| --- | --- |
+| `list_hackathon_topics()` | List all 21 handbook topics and seven challenge briefs. |
+| `get_hackathon_info(topic="overview", force_refresh=False)` | Read any bundled topic, including warnings and related topics. `force_refresh` is accepted but ignored. |
+| `search_hackathon_info(query, limit=5)` | Search all 28 topics for every query word, ignoring case, and return ranked excerpts. |
+
+Responses include `offline: true`, `snapshot_date` and a static-information
+notice instead of live fetch times or cache status. Source URLs remain in the
+data file for maintainers, not in tool responses. Search covers the local
+snapshot only. Published disagreements about end times, room names and Q&A
+weekdays are flagged in `warnings`; missing facts are not invented.
+
+The bundle contains participant information and challenge descriptions, not
+image-only floor plans, videos, external technical guides/datasets, API services,
+registration forms or booking functionality. These limitations are stated in
+the relevant topics. The FAQ includes answers that were embedded in the source
+page data, not just the visible question headings.
+
+To update information, edit the bundled JSON and its `snapshot_date`, restart the
+Zurich server, and reconnect the MCP client. There is no automatic refresh or
+file watcher. Old URL, timeout and cache settings are no longer used; the module
+is enabled with `hackathon: {}` in its tool configuration.
+
+Build the shared Docker image or install the shared Python runtime **before**
+disconnecting from the internet. Then start only the offline server with
+`docker compose up --no-build -d zurich-hackathon`. The Basel server still requires
+internet access for live parking data.
 
 ## Basel Parking Availability
 
@@ -251,7 +285,7 @@ and restart the server to apply changes, then reconnect clients.
 ```bash
 python3.12 -m venv .venv
 . .venv/bin/activate
-python -m pip install -r requirements.txt -r servers/zurich-hackathon/tools/requirements/hackathon.txt -r servers/basel-parking/tools/requirements/basel_parking.txt
+python -m pip install -r requirements.txt -r servers/basel-parking/tools/requirements/basel_parking.txt
 python -m unittest discover -s tests -v
 MCP_HOST=127.0.0.1 MCP_PORT=8557 python main.py --server-dir servers/zurich-hackathon
 ```

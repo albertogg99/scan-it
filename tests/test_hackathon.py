@@ -1,10 +1,11 @@
 import importlib.util
+import inspect
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import Mock, patch
 
-import httpx
 import yaml
 
 
@@ -16,207 +17,10 @@ spec.loader.exec_module(hackathon)
 
 class HackathonTests(unittest.TestCase):
     def setUp(self):
-        self.url = "https://zh.ai-weeks.ch/schedule-2026"
-        self.config = {
-            "pages": {"schedule": {"title": "Schedule 2026", "url": self.url}},
-            "cache_ttl_seconds": 300,
-        }
+        self.config = {}
         self.handbook = hackathon.Handbook(self.config)
 
-    def response(self, content: str, status: int = 200, content_type: str = "text/html"):
-        return httpx.Response(
-            status,
-            text=content,
-            headers={"content-type": content_type},
-            request=httpx.Request("GET", self.url),
-        )
-
-    def test_extracts_content_without_links_images_or_navigation(self):
-        html = (
-            '<html><nav>Outside navigation</nav><main><h1>Schedule</h1>'
-            '<nav>Inside navigation</nav><script>hidden code</script>'
-            '<style>hidden style</style><table><tr><th>Time</th><th>Event</th></tr>'
-            '<tr><td>12:00</td><td>Submission</td></tr></table>'
-            '<a href="/challenges">Challenges</a><img alt="Map" src="/map.png">'
-            '</main><footer>Footer</footer></html>'
-        )
-        content = hackathon.extract_content(html, self.url)
-        self.assertIn("# Schedule", content)
-        self.assertIn("12:00", content)
-        self.assertIn("Submission", content)
-        self.assertIn("Challenges", content)
-        self.assertIn("Map", content)
-        self.assertNotIn("https://", content)
-        self.assertNotIn("](", content)
-        self.assertNotIn("navigation", content)
-        self.assertNotIn("hidden", content)
-        self.assertNotIn("Footer", content)
-
-    def test_empty_or_unrecognized_page_is_not_reported_as_information(self):
-        for html in ("<html>Loading...</html>", "<main><script>Loading...</script></main>"):
-            with self.subTest(html=html), self.assertRaises(ValueError):
-                hackathon.extract_content(html, self.url)
-
-    def test_topic_listing_does_not_fetch_pages(self):
-        with patch.object(hackathon.httpx, "get") as fetch:
-            self.assertEqual(self.handbook.topics(), [{
-                "topic": "schedule", "title": "Schedule 2026",
-            }])
-        fetch.assert_not_called()
-
-    def test_bare_urls_and_url_link_labels_are_removed(self):
-        html = (
-            '<main><p>Doors open at 08:00.</p><p>https://example.com/details</p>'
-            '<p>www.example.com</p><a href="https://ai-weeks.ch/2026/hack-zurich">'
-            'ai-weeks.ch/2026/hack-zurich</a>'
-            '<a href="https://example.com">https://example.com</a>'
-            '<a href="/challenges">Challenge information</a></main>'
-        )
-        content = hackathon.extract_content(html, self.url)
-        self.assertIn("Doors open at 08:00.", content)
-        self.assertIn("Challenge information", content)
-        self.assertNotIn("example.com", content)
-        self.assertNotIn("ai-weeks.ch", content)
-
-    def test_embedded_faq_answers_are_returned_without_executing_scripts(self):
-        records = {
-            "30": ["$", "section", None, {"children": [
-                ["$", "h2", None, {"children": "FAQ"}], "$L40", "$L41", "$L42",
-            ]}],
-            "40": ["$", "h3", None, {"children": "What should participants bring?"}],
-            "41": ["$", "p", None, {"children": [
-                "Bring a laptop. ", ["$", "a", None, {
-                    "href": "https://example.com/checklist", "children": "Checklist",
-                }],
-            ]}],
-            "42": "$L42",
-        }
-        stream = "".join(f"{record_id}:{json.dumps(node)}\n" for record_id, node in records.items())
-        midpoint = len(stream) // 2
-        scripts = "".join(
-            f"<script>self.__next_f.push({json.dumps([1, chunk])})</script>"
-            for chunk in (stream[:midpoint], stream[midpoint:])
-        )
-        html = (
-            '<main><section><h2>FAQ</h2><h3><button>Question</button></h3>'
-            '<div hidden></div></section></main><script>throw new Error("Do not run")</script>'
-            + scripts
-        )
-        content = hackathon.extract_content(html, self.url)
-        self.assertIn("What should participants bring?", content)
-        self.assertIn("Bring a laptop.", content)
-        self.assertIn("Checklist", content)
-        self.assertNotIn("example.com", content)
-        self.assertNotIn("Do not run", content)
-        self.assertNotIn("$L", content)
-
-    def test_server_fetches_content_without_returning_urls(self):
-        response = self.response(
-            '<main><h1>Schedule</h1><p>Expert jury at 12:00.</p>'
-            '<a href="/jury-process-and-criteria">Jury criteria</a></main>'
-        )
-        with patch.object(hackathon.httpx, "get", return_value=response) as fetch:
-            result = self.handbook.read("schedule", force_refresh=True)
-            search = self.handbook.search("expert jury")
-        self.assertEqual(fetch.call_args.args[0], self.url)
-        self.assertIn("Expert jury at 12:00.", result["content"])
-        self.assertEqual(search["matches"][0]["topic"], "schedule")
-        payload = json.dumps([self.handbook.topics(), result, search])
-        self.assertNotIn("source_url", payload)
-        self.assertNotIn("https://", payload)
-        self.assertNotIn("](", payload)
-
-    def test_retrieval_includes_provenance_and_caches_until_expiry(self):
-        response = self.response("<main><h1>Schedule</h1><p>Doors open at 08:00.</p></main>")
-        with (
-            patch.object(hackathon.httpx, "get", return_value=response) as fetch,
-            patch.object(hackathon.time, "monotonic", return_value=100) as clock,
-        ):
-            first = self.handbook.read("schedule")
-            second = self.handbook.read("schedule")
-            self.assertFalse(first["cached"])
-            self.assertTrue(second["cached"])
-            self.assertEqual(first["fetched_at"], second["fetched_at"])
-            self.assertNotIn("source_url", first)
-            self.assertIn("08:00", first["content"])
-            fetch.assert_called_once()
-            self.assertFalse(fetch.call_args.kwargs["follow_redirects"])
-            self.assertIs(fetch.call_args.kwargs["verify"], self.handbook.ssl_context)
-            self.assertTrue(self.handbook.ssl_context.check_hostname)
-            clock.return_value = 401
-            self.assertFalse(self.handbook.read("schedule")["cached"])
-            self.assertEqual(fetch.call_count, 2)
-
-    def test_force_refresh_bypasses_cache(self):
-        response = self.response("<main>Updated schedule</main>")
-        with patch.object(hackathon.httpx, "get", return_value=response) as fetch:
-            self.handbook.read("schedule")
-            self.handbook.read("schedule", force_refresh=True)
-        self.assertEqual(fetch.call_count, 2)
-
-    def test_unknown_topic_cannot_be_used_to_fetch_arbitrary_urls(self):
-        with patch.object(hackathon.httpx, "get") as fetch:
-            with self.assertRaisesRegex(ValueError, "Unknown topic"):
-                self.handbook.read("http://localhost/secrets")
-        fetch.assert_not_called()
-
-    def test_configuration_rejects_non_official_or_insecure_urls(self):
-        for url in ("http://zh.ai-weeks.ch/", "https://example.com/", "https://zh.ai-weeks.ch@localhost/"):
-            self.config["pages"]["schedule"]["url"] = url
-            with self.subTest(url=url), self.assertRaises(ValueError):
-                hackathon.Handbook(self.config)
-
-    def test_http_errors_and_redirects_are_not_cached(self):
-        for status in (302, 404, 503):
-            with self.subTest(status=status), patch.object(
-                hackathon.httpx, "get", return_value=self.response("Error", status),
-            ):
-                with self.assertRaises(httpx.HTTPStatusError):
-                    self.handbook.read("schedule")
-                self.assertEqual(self.handbook.cache, {})
-
-    def test_non_html_responses_are_rejected(self):
-        with patch.object(hackathon.httpx, "get", return_value=self.response("{}", content_type="application/json")):
-            with self.assertRaisesRegex(ValueError, "Expected an HTML"):
-                self.handbook.read("schedule")
-
-    def test_search_returns_matches_and_reports_partial_failures(self):
-        self.config["pages"]["unavailable"] = {"title": "Unavailable", "url": "https://zh.ai-weeks.ch/unavailable"}
-        page = {"topic": "schedule", "title": "Schedule 2026", "source_url": self.url,
-                "fetched_at": "2026-09-24T08:00:00+00:00", "content": "Submission to the expert jury at 12:00."}
-
-        def read(topic):
-            if topic == "unavailable":
-                raise httpx.ConnectError("Site unavailable")
-            return page
-
-        with patch.object(self.handbook, "read", side_effect=read):
-            result = self.handbook.search("EXPERT jury", limit=1)
-        self.assertEqual(result["matches"][0]["topic"], "schedule")
-        self.assertEqual(result["total_matches"], 1)
-        self.assertFalse(result["complete"])
-        self.assertEqual(result["errors"][0]["topic"], "unavailable")
-        self.assertNotIn("source_url", json.dumps(result))
-
-    def test_http_errors_do_not_expose_request_or_help_urls(self):
-        response = self.response("Unavailable", status=503)
-        with patch.object(hackathon.httpx, "get", return_value=response):
-            result = self.handbook.search("jury")
-        error = result["errors"][0]["error"]
-        self.assertIn("HTTP 503", error)
-        self.assertNotIn("https://", json.dumps(result))
-
-    def test_search_distinguishes_no_matches_from_invalid_queries(self):
-        page = {"title": "Schedule", "content": "Lunch"}
-        with patch.object(self.handbook, "read", return_value=page):
-            result = self.handbook.search("unmatched")
-        self.assertEqual(result["matches"], [])
-        self.assertTrue(result["complete"])
-        for query, limit in ((" ", 5), ("lunch", 0), ("lunch", 21)):
-            with self.subTest(query=query, limit=limit), self.assertRaises(ValueError):
-                self.handbook.search(query, limit)
-
-    def test_register_exposes_all_three_tools(self):
+    def registered_tools(self):
         server = Mock()
         registered = {}
 
@@ -228,28 +32,216 @@ class HackathonTests(unittest.TestCase):
 
         server.tool.side_effect = tool
         hackathon.register(server, self.config)
-        self.assertEqual(set(registered), {"list_hackathon_topics", "get_hackathon_info", "search_hackathon_info"})
-        self.assertEqual(registered["list_hackathon_topics"]()[0]["topic"], "schedule")
-        with patch.object(hackathon.Handbook, "read", side_effect=httpx.ConnectError("Site unavailable")):
-            with self.assertRaisesRegex(hackathon.ToolError, "network and TLS"):
-                registered["get_hackathon_info"]("schedule")
-        with self.assertRaisesRegex(hackathon.ToolError, "at least one search word"):
-            registered["search_hackathon_info"](" ")
-        with patch.object(hackathon.httpx, "get", return_value=self.response("Error", status=503)):
-            with self.assertRaisesRegex(hackathon.ToolError, "HTTP 503") as raised:
-                registered["get_hackathon_info"]("schedule")
-        self.assertNotIn("https://", str(raised.exception))
-        with self.assertRaises(hackathon.ToolError) as raised:
-            registered["get_hackathon_info"]("https://example.com")
-        self.assertNotIn("https://", str(raised.exception))
+        return registered
+
+    def test_read_works_without_network(self):
+        with patch("socket.socket.connect", side_effect=AssertionError("Network access is disabled")):
+            handbook = hackathon.Handbook(self.config)
+            result = handbook.read("schedule", force_refresh=True)
+        self.assertIn("Schedule", result["content"])
+        self.assertTrue(result["offline"])
+        self.assertEqual(result["snapshot_date"], "2026-09-24")
+        self.assertNotIn("fetched_at", result)
+
+    def test_startup_has_no_tool_dependencies_to_install(self):
+        from main import _install_tool_requirements
+
+        with TemporaryDirectory() as directory, patch("subprocess.run") as install:
+            _install_tool_requirements(SERVER_DIR / "tools", ["hackathon"], Path(directory))
+        install.assert_not_called()
+
+    def test_all_topics_are_readable_with_network_disabled(self):
+        with patch("socket.socket.connect", side_effect=AssertionError("Network access is disabled")):
+            for topic in self.handbook.topics():
+                with self.subTest(topic=topic["topic"]):
+                    result = self.handbook.read(topic["topic"])
+                    self.assertEqual(result["title"], topic["title"])
+                    self.assertTrue(result["content"].strip())
+                    self.assertTrue(result["offline"])
+                    self.assertIn("Not live", result["notice"])
+                    for related in result["related_topics"]:
+                        self.handbook.read(related)
+
+    def test_force_refresh_is_a_compatible_no_op(self):
+        with patch("socket.socket.connect", side_effect=AssertionError("Network access is disabled")):
+            first = self.handbook.read("schedule")
+            refreshed = self.handbook.read("schedule", force_refresh=True)
+        self.assertEqual(first, refreshed)
+        self.assertNotIn("cached", first)
+
+    def test_unknown_topic_is_rejected_without_network(self):
+        with patch("socket.socket.connect", side_effect=AssertionError("Network access is disabled")):
+            for topic in ("unknown", "http://localhost/secrets", "../handbook.json"):
+                with self.subTest(topic=topic), self.assertRaisesRegex(ValueError, "Unknown topic"):
+                    self.handbook.read(topic)
+
+    def test_responses_include_content_without_website_links(self):
+        results = [self.handbook.read(topic["topic"]) for topic in self.handbook.topics()]
+        results.extend([
+            self.handbook.topics(), self.handbook.list_challenges(),
+            self.handbook.challenge("mcp"), self.handbook.search("expert jury"),
+        ])
+        payload = json.dumps(results)
+        for unwanted in ("source_url", "https://", "http://", "]("):
+            self.assertNotIn(unwanted, payload)
+
+    def test_published_schedule_and_faq_answers_are_bundled(self):
+        schedule = self.handbook.read("schedule")["content"]
+        for expected in ("September 24, 2026", "September 25, 2026", "12:00", "17:30", "22:00"):
+            self.assertIn(expected, schedule)
+        faq = self.handbook.read("faq")["content"]
+        for expected in ("English", "wheelchair", "16 or over", "intellectual property"):
+            self.assertIn(expected, faq)
+
+    def test_conflicts_and_image_only_content_are_flagged(self):
+        schedule_warnings = " ".join(self.handbook.read("schedule")["warnings"])
+        self.assertIn("21:00", schedule_warnings)
+        self.assertIn("22:00", schedule_warnings)
+        contact_warnings = " ".join(self.handbook.read("communication")["warnings"])
+        self.assertIn("K3", contact_warnings)
+        self.assertIn("K4", contact_warnings)
+        self.assertIn("not included", " ".join(self.handbook.read("venue_map")["warnings"]))
+
+    def test_challenge_listing_contains_seven_unique_briefs(self):
+        result = self.handbook.list_challenges()
+        challenges = result["challenges"]
+        self.assertTrue(result["offline"])
+        self.assertEqual(len(challenges), 7)
+        self.assertEqual(len({challenge["id"] for challenge in challenges}), 7)
+        for challenge in challenges:
+            with self.subTest(challenge=challenge["id"]):
+                detail = self.handbook.challenge(challenge["id"])
+                self.assertEqual(detail["title"], challenge["title"])
+                self.assertEqual(detail["partner"], challenge["partner"])
+                self.assertEqual(detail["summary"], challenge["summary"])
+                self.assertIn("## Objective", detail["content"])
+                self.assertEqual(self.handbook.read(detail["topic"])["content"], detail["content"])
+
+    def test_challenge_lookup_accepts_names_partners_and_aliases(self):
+        examples = {
+            "  SWISS GROUNDING MCP  ": "swiss-grounding-mcp",
+            "Swisscom (1)": "swiss-grounding-mcp",
+            "mcp": "swiss-grounding-mcp",
+            "Swisscom 2": "fighting-identity-fraud-in-the-age-of-ai",
+            "fraud": "fighting-identity-fraud-in-the-age-of-ai",
+            "Viseca": "agent-on-a-leash",
+            "Swiss Life": "ai-support-agent-for-operational-service-desks",
+            "swisslife": "ai-support-agent-for-operational-service-desks",
+            "Apertus": "build-a-public-ai-service",
+            "VZ Verm\u00f6gensZentrum": "digital-legacy-ai",
+            "VZ VermogensZentrum": "digital-legacy-ai",
+            "UBS": "transaction-activity-forecasting",
+        }
+        for query, expected in examples.items():
+            with self.subTest(query=query):
+                self.assertEqual(self.handbook.challenge(query)["id"], expected)
+
+    def test_ambiguous_challenge_returns_choices_instead_of_guessing(self):
+        with self.assertRaisesRegex(ValueError, "Multiple challenges match") as raised:
+            self.handbook.challenge("Swisscom")
+        self.assertIn("swiss-grounding-mcp", str(raised.exception))
+        self.assertIn("fighting-identity-fraud-in-the-age-of-ai", str(raised.exception))
+
+    def test_empty_and_unknown_challenges_have_actionable_errors(self):
+        for query in ("", "  ", "???", "not-a-challenge", "https://example.com"):
+            with self.subTest(query=query), self.assertRaisesRegex(ValueError, "get_challenges"):
+                self.handbook.challenge(query)
+
+    def test_search_includes_challenge_briefs_and_uses_all_words(self):
+        result = self.handbook.search("MCP jurisdiction")
+        self.assertEqual(result["total_matches"], 1)
+        self.assertEqual(result["matches"][0]["topic"], "challenge/swiss-grounding-mcp")
+        self.assertEqual(result["searched_topics"], 28)
+        self.assertTrue(result["complete"])
+        self.assertEqual(result["errors"], [])
+        self.assertTrue(result["offline"])
+        for match in result["matches"]:
+            self.assertTrue(self.handbook.read(match["topic"])["content"])
+
+    def test_search_limits_and_ranks_matches_deterministically(self):
+        result = self.handbook.search("pitch", limit=2)
+        self.assertEqual(len(result["matches"]), 2)
+        self.assertGreater(result["total_matches"], 2)
+        self.assertEqual(result, self.handbook.search("PITCH", limit=2) | {"query": "pitch"})
+        self.assertEqual(result["matches"], sorted(
+            result["matches"], key=lambda match: (-match["score"], match["topic"]),
+        ))
+
+    def test_search_distinguishes_no_matches_from_invalid_queries(self):
+        result = self.handbook.search("nonexistentword")
+        self.assertEqual(result["matches"], [])
+        self.assertEqual(result["total_matches"], 0)
+        self.assertTrue(result["complete"])
+        for query, limit in ((" ", 5), ("lunch", 0), ("lunch", 21)):
+            with self.subTest(query=query, limit=limit), self.assertRaises(ValueError):
+                self.handbook.search(query, limit)
+
+    def test_returned_lists_cannot_mutate_the_snapshot(self):
+        self.handbook.read("schedule")["warnings"].clear()
+        self.assertTrue(self.handbook.read("schedule")["warnings"])
+        self.handbook.read("event_details")["related_topics"].clear()
+        self.assertEqual(self.handbook.read("event_details")["related_topics"], ["faq"])
+        self.handbook.list_challenges()["challenges"][0]["title"] = "Changed"
+        self.assertEqual(self.handbook.challenge("Viseca")["title"], "Agent on a Leash")
+
+    def test_simple_tools_have_no_arguments_and_read_the_right_topic(self):
+        registered = self.registered_tools()
+        topic_tools = {
+            "get_event_info": "overview", "get_schedule": "schedule", "get_location": "location",
+            "get_faq": "faq", "get_checklist": "checklist", "get_team_info": "team_building",
+            "get_judging_criteria": "judging", "get_submission_info": "submission",
+            "get_contacts": "communication", "get_tech_goodies": "tech_goodies",
+            "get_travel_reimbursement": "travel_reimbursement", "get_first_aid": "first_aid",
+        }
+        self.assertEqual(set(registered), set(topic_tools) | {
+            "list_hackathon_topics", "get_hackathon_info", "search_hackathon_info",
+            "get_challenges", "get_challenge",
+        })
+        for name, topic in topic_tools.items():
+            with self.subTest(tool=name):
+                self.assertEqual(len(inspect.signature(registered[name]).parameters), 0)
+                self.assertEqual(registered[name](), self.handbook.read(topic))
+
+    def test_every_registered_tool_works_without_network(self):
+        with patch("socket.socket.connect", side_effect=AssertionError("Network access is disabled")):
+            registered = self.registered_tools()
+            arguments = {
+                "get_hackathon_info": {"topic": "schedule", "force_refresh": True},
+                "search_hackathon_info": {"query": "expert jury"},
+                "get_challenge": {"challenge": "mcp"},
+            }
+            for name, function in registered.items():
+                with self.subTest(tool=name):
+                    result = function(**arguments.get(name, {}))
+                    self.assertTrue(result)
+                    if isinstance(result, dict):
+                        self.assertTrue(result["offline"])
+
+    def test_registered_tools_translate_invalid_input_to_tool_errors(self):
+        registered = self.registered_tools()
+        examples = (
+            ("get_hackathon_info", {"topic": "https://example.com"}, "Unknown topic"),
+            ("get_challenge", {"challenge": "unknown"}, "get_challenges"),
+            ("get_challenge", {"challenge": "Swisscom"}, "Multiple challenges"),
+            ("search_hackathon_info", {"query": " "}, "at least one search word"),
+            ("search_hackathon_info", {"query": "jury", "limit": 0}, "limit"),
+        )
+        for name, arguments, expected in examples:
+            with self.subTest(tool=name), self.assertRaisesRegex(hackathon.ToolError, expected) as raised:
+                registered[name](**arguments)
+            self.assertNotIn("https://", str(raised.exception))
 
     def test_bundled_configuration_contains_the_handbook_topics(self):
         with (SERVER_DIR / "config" / "tools_config.yaml").open(encoding="utf-8") as config_file:
             config = yaml.safe_load(config_file)
         topics = {topic["topic"] for topic in hackathon.Handbook(config["hackathon"]).topics()}
-        self.assertTrue({"overview", "schedule", "challenges", "judging", "location", "first_aid"} <= topics)
-        self.assertEqual(len(topics), 21)
-        self.assertEqual(config["hackathon"]["pages"]["faq"]["url"], config["hackathon"]["pages"]["event_details"]["url"])
+        self.assertEqual(topics - {topic for topic in topics if topic.startswith("challenge/")}, {
+            "overview", "faq", "event_details", "code_of_conduct", "first_aid", "location",
+            "venue_map", "challenges", "qa_sessions", "tech_goodies", "team_building",
+            "checklist", "schedule", "relax_recharge", "communication", "organizers",
+            "judging", "experts", "submission", "travel_reimbursement", "photos_and_video",
+        })
+        self.assertEqual(len(topics), 28)
 
 
 if __name__ == "__main__":
