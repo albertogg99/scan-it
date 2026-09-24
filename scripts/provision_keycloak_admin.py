@@ -31,6 +31,12 @@ def provision():
         api("groups", "POST", {"name": "admin"})
         group = next(group for group in api("groups?search=admin&exact=true") if group["path"] == "/admin")
     client = api("clients?clientId=swiss-discover-web")[0]
+    public_url = os.environ.get("PUBLIC_FRONTEND_URL", "").rstrip("/")
+    if public_url and (f"{public_url}/*" not in client.get("redirectUris", [])
+                       or public_url not in client.get("webOrigins", [])):
+        client["redirectUris"] = sorted({*client.get("redirectUris", []), f"{public_url}/*"})
+        client["webOrigins"] = sorted({*client.get("webOrigins", []), public_url})
+        api(f"clients/{client['id']}", "PUT", client)
     mapper = next(mapper for mapper in realm["clients"][0]["protocolMappers"] if mapper["name"] == "swiss-discover-groups")
     mapper_path = f"clients/{client['id']}/protocol-mappers/models"
     existing = next((item for item in api(mapper_path) if item["name"] == mapper["name"]), None)
