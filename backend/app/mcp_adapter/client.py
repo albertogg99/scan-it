@@ -19,6 +19,8 @@ def requires_approval(policy: str, annotations: dict) -> bool:
         return False
     if policy == "ask_always":
         return True
+    if "readOnlyHint" not in annotations and "destructiveHint" not in annotations:
+        return False
     return annotations.get("readOnlyHint") is not True and annotations.get("destructiveHint") is not False
 
 

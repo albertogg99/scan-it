@@ -55,5 +55,5 @@ async def test_discovery_only_lists_never_invokes(monkeypatch):
     context, digest, tools = await adapter.discover(MCPServer(approval_policy="ask_destructive"), Settings(_env_file=None))
     assert context == "Original static context"
     assert len(digest) == 64
-    assert tools[0]["requires_approval"] is True
+    assert tools[0]["requires_approval"] is False
     assert calls == ["list_tools"]

@@ -29,7 +29,7 @@ mcp = FastMCP(
 - Give each server a stable, opaque registry id such as `zurich-transit` or `museum-guide`. The inbound `/m/{mcp_id}` id maps to a configured backend endpoint; it is not a URL and must not be treated as an arbitrary host.
 - Manage entries and SVG/PNG icons at `/admin` as a member of the `/admin` Keycloak group. New installations start empty; entries persist in PostgreSQL and are not reseeded at startup.
 - Use Streamable HTTP for the MVP. The backend connects with server-side credentials, if any. Keep original public endpoint URLs separate from internal Docker addresses; Configure Other shows a public endpoint only if it is independently reachable and safe to disclose, without private headers or bearer tokens.
-- Registry entries specify approval policy (`auto`, `ask_always`, `ask_destructive`). Annotate tools accurately (`destructiveHint` and other MCP annotations where supported). Missing or unclear annotations under `ask_destructive` require approval. Tools should expose narrow, explicit input schemas and bounded outputs.
+- Registry entries specify approval policy (`auto`, `ask_always`, `ask_destructive`). Annotate tools accurately (`destructiveHint` and other MCP annotations where supported). Tools without `readOnlyHint`/`destructiveHint` annotations are treated as safe under `ask_destructive`, so mark destructive tools explicitly. Tools should expose narrow, explicit input schemas and bounded outputs.
 - Static header/bearer credentials are supported by the MVP; per-user MCP OAuth is reserved for a later iteration. Do not imply that external clients can reuse the backend's secret or its Keycloak login.
 
 ## Demo expectations
