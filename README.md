@@ -72,14 +72,21 @@ https://zh.ai-weeks.ch/. It exposes three tools:
 
 | Tool | Purpose |
 | --- | --- |
-| `list_hackathon_topics()` | List configured topics and official source URLs without a network request. |
-| `get_hackathon_info(topic="overview", force_refresh=False)` | Read a page as Markdown, including tables, links, its source URL, and UTC fetch time. |
+| `list_hackathon_topics()` | List configured topic IDs and titles without a network request. |
+| `get_hackathon_info(topic="overview", force_refresh=False)` | Return topic text and tables fetched by the server, with UTC fetch time and no website links. |
 | `search_hackathon_info(query, limit=5)` | Search page titles and content for all query words, ignoring case; return ranked excerpts. |
 
 The 21 topics cover updates, FAQs, location, the venue map, challenges, team
 building, schedules, judging, submissions, support, travel reimbursement, and
-other handbook sections. The FAQ's linked main event page is included too.
+other handbook sections. The FAQ topic reads the main event page directly,
+including answers embedded in the page data rather than visible static HTML.
 Use the listing tool for topic IDs, then read a matching topic for full details.
+
+Source URLs stay in server configuration, not tool responses. The server removes
+hyperlink destinations, image URLs, and raw web URLs from extracted content and
+does not expose request URLs in errors. Link labels and image descriptions are
+retained as text; clients use the MCP tools rather than browsing to read more.
+Images, videos, and external forms themselves are not returned as text.
 
 Information is fetched from the official pages on demand, not copied into a
 static event snapshot. Successful reads are cached in memory for five minutes;
@@ -87,7 +94,8 @@ static event snapshot. Successful reads are cached in memory for five minutes;
 time. Search fetches pages with up to four concurrent requests and reports any
 failures in `errors`, with `complete=False`; an unavailable page is not treated
 as evidence that information does not exist. Reads fail explicitly if a site is
-unavailable or its HTML is not readable. Internet access is required.
+unavailable or its HTML is not readable. Internet access and working TLS trust
+are required on the MCP server, not on the client for reading the source pages.
 
 Edit `servers/zurich-hackathon/config/tools_config.yaml` to maintain the topic
 catalog, timeout, and cache lifetime. URLs must be HTTPS on the official AI Weeks
