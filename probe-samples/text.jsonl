@@ -1,0 +1,10 @@
+{"choices": [{"delta": {"content": "", "role": "assistant"}, "finish_reason": null, "index": 0, "logprobs": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk", "prompt_text": null, "prompt_token_ids": null}
+{"choices": [{"delta": {"content": "The"}, "finish_reason": null, "index": 0, "logprobs": null, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"choices": [{"delta": {"content": " capital"}, "finish_reason": null, "index": 0, "logprobs": null, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"choices": [{"delta": {"content": " of"}, "finish_reason": null, "index": 0, "logprobs": null, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"choices": [{"delta": {"content": " Switzerland"}, "finish_reason": null, "index": 0, "logprobs": null, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"choices": [{"delta": {"content": " is"}, "finish_reason": null, "index": 0, "logprobs": null, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"choices": [{"delta": {"content": " Bern"}, "finish_reason": null, "index": 0, "logprobs": null, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"choices": [{"delta": {"content": "."}, "finish_reason": null, "index": 0, "logprobs": null, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"choices": [{"delta": {}, "finish_reason": "stop", "index": 0, "logprobs": null, "stop_reason": 68, "token_ids": null}], "created": 1790243884, "model": "swiss-ai/Apertus-v1.5-70B", "object": "chat.completion.chunk"}
+{"done": true}

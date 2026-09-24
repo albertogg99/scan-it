@@ -1,0 +1,17 @@
+servers:
+  - id: zurich-transit
+    title: Zurich Transit Live
+    description: Live departures and stop lookup for Zurich public transport.
+    backend_url: ${ZURICH_TRANSIT_URL:-http://zurich-transit:8000/mcp}
+    public_url: ${ZURICH_TRANSIT_PUBLIC_URL:-}
+    auth: { type: none }
+    enabled: true
+    approval_policy: ask_destructive
+  - id: museum-guide
+    title: Museum Guide (demo)
+    description: Guide to an invented demo exhibition with static exhibit notes.
+    backend_url: ${MUSEUM_GUIDE_URL:-http://museum-guide:8000/mcp}
+    public_url: ${MUSEUM_GUIDE_PUBLIC_URL:-}
+    auth: { type: bearer, credential_env: MUSEUM_GUIDE_TOKEN }
+    enabled: true
+    approval_policy: ask_destructive

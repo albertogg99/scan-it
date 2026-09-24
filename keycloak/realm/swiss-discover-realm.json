@@ -1,0 +1,44 @@
+{
+  "realm": "swiss-discover",
+  "enabled": true,
+  "displayName": "Swiss Discover",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "resetPasswordAllowed": false,
+  "sslRequired": "none",
+  "loginTheme": "swiss-discover",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["en", "de", "fr", "it"],
+  "defaultLocale": "en",
+  "clients": [
+    {
+      "clientId": "swiss-discover-web",
+      "name": "Swiss Discover Web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:3000/*", "http://${PUBLIC_HOST}:3000/*"],
+      "webOrigins": ["http://localhost:3000", "http://${PUBLIC_HOST}:3000"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "swiss-discover-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "swiss-discover-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ]
+}
