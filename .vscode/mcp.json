@@ -1,0 +1,40 @@
+{
+    "servers": {
+        "zurich-hackathon": {
+            "type": "stdio",
+            "command": "docker",
+            "args": [
+                "compose",
+                "--project-directory",
+                "${workspaceFolder}",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "zurich-hackathon",
+                "python",
+                "main.py",
+                "--transport",
+                "stdio"
+            ]
+        },
+        "text-demo": {
+            "type": "stdio",
+            "command": "docker",
+            "args": [
+                "compose",
+                "--project-directory",
+                "${workspaceFolder}",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "text-demo",
+                "python",
+                "main.py",
+                "--transport",
+                "stdio"
+            ]
+        }
+    }
+}

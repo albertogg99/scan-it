@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Zurich Hackathon MCP",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "--server-dir",
+                "${workspaceFolder}/servers/zurich-hackathon"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "MCP_HOST": "127.0.0.1",
+                "MCP_PORT": "8557",
+                "MCP_SERVER_NAME": "Zurich Hackathon 2026"
+            },
+            "justMyCode": true
+        },
+        {
+            "name": "Debug Text Tools MCP",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "args": [
+                "--server-dir",
+                "${workspaceFolder}/servers/text-demo"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "env": {
+                "MCP_HOST": "127.0.0.1",
+                "MCP_PORT": "8558",
+                "MCP_SERVER_NAME": "Text Tools Demo"
+            },
+            "justMyCode": true
+        }
+    ]
+}

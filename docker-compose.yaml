@@ -1,0 +1,43 @@
+name: dynamic-mcp
+
+x-dynamic-mcp: &dynamic-mcp
+  build: .
+  image: dynamic-mcp:local
+  init: true
+  restart: unless-stopped
+  environment: &mcp-environment
+    MCP_HOST: "0.0.0.0"
+    MCP_PORT: "8555"
+    LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+  healthcheck:
+    test:
+      - CMD
+      - python
+      - -c
+      - "import socket; socket.create_connection(('127.0.0.1', 8555), timeout=2).close()"
+    interval: 15s
+    timeout: 5s
+    retries: 3
+    start_period: 60s
+
+services:
+  zurich-hackathon:
+    <<: *dynamic-mcp
+    ports:
+      - "127.0.0.1:${HACKATHON_PORT:-8555}:8555"
+    environment:
+      <<: *mcp-environment
+      MCP_SERVER_NAME: "Zurich Hackathon 2026"
+    volumes:
+      - ./servers/zurich-hackathon:/app/server:ro
+
+  text-demo:
+    <<: *dynamic-mcp
+    profiles: [examples]
+    ports:
+      - "127.0.0.1:${TEXT_DEMO_PORT:-8556}:8555"
+    environment:
+      <<: *mcp-environment
+      MCP_SERVER_NAME: "Text Tools Demo"
+    volumes:
+      - ./servers/text-demo:/app/server:ro

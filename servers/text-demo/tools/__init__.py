@@ -1,0 +1,1 @@
+"""Example tool modules loaded by the dynamic MCP registry."""

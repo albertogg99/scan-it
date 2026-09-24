@@ -1,0 +1,67 @@
+hackathon:
+  cache_ttl_seconds: 300
+  timeout_seconds: 15
+  pages:
+    overview:
+      title: Welcome to Zurich Hackathon 2026
+      url: https://zh.ai-weeks.ch/
+    faq:
+      title: Frequently Asked Questions
+      url: https://zh.ai-weeks.ch/frequently-asked-questions-faq
+    event_details:
+      title: Event Details and Registration FAQ
+      url: https://ai-weeks.ch/2026/hack-zurich
+    code_of_conduct:
+      title: Code of Conduct
+      url: https://zh.ai-weeks.ch/code-of-conduct
+    first_aid:
+      title: First Aid and Security
+      url: https://zh.ai-weeks.ch/first-aid-and-security
+    location:
+      title: Location and Arrival
+      url: https://zh.ai-weeks.ch/location-and-arrival
+    venue_map:
+      title: Kraftwerk Space Map
+      url: https://zh.ai-weeks.ch/kraftwerk-space-map
+    challenges:
+      title: Challenges Overview
+      url: https://zh.ai-weeks.ch/challenges
+    qa_sessions:
+      title: Q&A Sessions for Hackers
+      url: https://zh.ai-weeks.ch/qa-sessions-for-hackers
+    tech_goodies:
+      title: Tech Goodies
+      url: https://zh.ai-weeks.ch/tools
+    team_building:
+      title: How to Build a Team
+      url: https://zh.ai-weeks.ch/how-to-build-a-team
+    checklist:
+      title: Checklist
+      url: https://zh.ai-weeks.ch/checklist
+    schedule:
+      title: Schedule 2026
+      url: https://zh.ai-weeks.ch/schedule-2026
+    relax_recharge:
+      title: Relax and Recharge
+      url: https://zh.ai-weeks.ch/relax-recharge
+    communication:
+      title: Communication Channels
+      url: https://zh.ai-weeks.ch/communication-channels
+    organizers:
+      title: Organizing Team
+      url: https://zh.ai-weeks.ch/organizing-team
+    judging:
+      title: Jury Process and Evaluation Criteria
+      url: https://zh.ai-weeks.ch/jury-process-and-criteria
+    experts:
+      title: Experts
+      url: https://zh.ai-weeks.ch/experts
+    submission:
+      title: Submit to Expert Jury
+      url: https://zh.ai-weeks.ch/submit-to-expert-jury
+    travel_reimbursement:
+      title: Travel Reimbursement
+      url: https://zh.ai-weeks.ch/travel-reimbursement
+    photos_and_video:
+      title: Pictures and Video
+      url: https://zh.ai-weeks.ch/pictures-and-video
