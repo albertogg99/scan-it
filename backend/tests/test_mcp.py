@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from types import SimpleNamespace
 
 import pytest
-from fastapi import HTTPException
+from fastmcp import Client, FastMCP
 
 from app.mcp_adapter import client as adapter
 from app.persistence.models import MCPServer
@@ -10,32 +10,21 @@ from app.settings import Settings
 
 
 @pytest.mark.asyncio
-async def test_missing_and_required_prompt(monkeypatch):
-    fake = SimpleNamespace(list_prompts=None)
-
+@pytest.mark.parametrize("instructions", [None, "Server initialization context"])
+async def test_initialize_instructions_with_real_fastmcp(monkeypatch, instructions):
     @asynccontextmanager
     async def fake_connect(server, settings):
-        yield fake
+        async with Client(FastMCP("test", instructions=instructions)) as client:
+            yield client
 
     monkeypatch.setattr(adapter, "connect", fake_connect)
     server = MCPServer(approval_policy="ask_destructive")
     settings = Settings(_env_file=None)
 
-    async def no_prompts():
-        return []
-
-    fake.list_prompts = no_prompts
-    with pytest.raises(HTTPException) as missing:
-        await adapter.discover(server, settings)
-    assert missing.value.detail["code"] == "context_prompt_missing"
-
-    async def requires_argument():
-        return [SimpleNamespace(name="general_context", arguments=[SimpleNamespace(required=True)])]
-
-    fake.list_prompts = requires_argument
-    with pytest.raises(HTTPException) as required:
-        await adapter.discover(server, settings)
-    assert required.value.detail["code"] == "context_prompt_requires_arguments"
+    context, digest, tools = await adapter.discover(server, settings)
+    assert context == (instructions or "")
+    assert len(digest) == 64
+    assert tools == []
 
 
 @pytest.mark.asyncio
@@ -43,14 +32,16 @@ async def test_discovery_only_lists_never_invokes(monkeypatch):
     calls = []
 
     class FakeClient:
+        initialize_result = SimpleNamespace(instructions="Original static context")
+
         async def list_prompts(self):
-            return [SimpleNamespace(name="general_context", arguments=[])]
+            raise AssertionError("must not discover prompts")
 
         async def get_prompt(self, name, arguments):
-            calls.append((name, arguments))
-            return SimpleNamespace(messages=[SimpleNamespace(content=SimpleNamespace(type="text", text="Original static context"))])
+            raise AssertionError("must not fetch prompts")
 
         async def list_tools(self):
+            calls.append("list_tools")
             return [SimpleNamespace(name="lookup", description="Find", inputSchema={"type": "object"}, annotations=None)]
 
         async def call_tool(self, *args):
@@ -65,4 +56,4 @@ async def test_discovery_only_lists_never_invokes(monkeypatch):
     assert context == "Original static context"
     assert len(digest) == 64
     assert tools[0]["requires_approval"] is True
-    assert calls == [("general_context", {})]
+    assert calls == ["list_tools"]

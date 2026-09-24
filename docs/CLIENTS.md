@@ -1,6 +1,6 @@
 # External MCP clients
 
-The app's **Local Chat** connects from the backend to registered Streamable HTTP MCP servers at `/mcp`. `GET /api/public/mcps/{id}` describes a server and exposes its registry `public_url` as `public_endpoint`; the backend API is **not** an MCP endpoint. A configured URL is metadata, not a relay or proof of external reachability. Docker Compose defaults the demo URLs to `http://${PUBLIC_HOST:-localhost}:8101/mcp` and `http://${PUBLIC_HOST:-localhost}:8102/mcp`. Nonempty `ZURICH_TRANSIT_PUBLIC_URL` and `MUSEUM_GUIDE_PUBLIC_URL` overrides take precedence. Never put credentials in a URL.
+The app's **Local Chat** connects from the backend to registered Streamable HTTP MCP servers at `/mcp`. `GET /api/public/mcps/{id}` describes a server and exposes its registry `public_url` as `public_endpoint`; the backend API is **not** an MCP endpoint. A configured URL is metadata, not a relay or proof of external reachability. Set public endpoints through `/admin`; they are not populated from environment variables. Never put credentials in a URL.
 
 | Server | Docker host endpoint (local demos only) | Authentication |
 |---|---|---|
@@ -15,4 +15,4 @@ The **Configure other chatbots** view shows a selectable endpoint, a copy button
 - [Claude remote custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp): Customize > Connectors > + > Add custom connector, enter the endpoint, add and connect, then enable it through + > Connectors in a chat. Team/Enterprise owners first register it in Organization settings > Connectors > Add > Custom > Web.
 - [Open WebUI MCP integration](https://docs.openwebui.com/features/extensibility/mcp/): Settings > Admin > Integrations > External Tool Servers > Add Connection. Select MCP (Streamable HTTP), enter URL and authentication, save, then enable it through + > Integrations > Tools in a chat.
 
-To advertise a separately deployed demo endpoint, set `ZURICH_TRANSIT_PUBLIC_URL` or `MUSEUM_GUIDE_PUBLIC_URL` in `.env` and recreate the backend so its startup seed updates the registry. For other MCPs, supply `public_url` in the registry entry and reseed. The setup page neither rewrites URLs nor exports app-held credentials. See [MCP servers](MCP_SERVERS.md) for transport and [contracts](CONTRACTS.md) for the discovery response.
+To advertise a separately deployed endpoint, edit its Public endpoint in `/admin` and save. No container restart is required. The setup page neither rewrites URLs nor exports app-held credentials. See [MCP servers](MCP_SERVERS.md) for transport and [contracts](CONTRACTS.md) for the discovery response.

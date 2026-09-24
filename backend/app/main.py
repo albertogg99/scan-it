@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import attachments, config, conversations, health, public, runs
+from app.api import admin, attachments, config, conversations, health, public, runs
 from app.agent.manager import reconciliate
 from app.persistence.session import purge_unattached, session_factory
 from app.settings import get_settings
@@ -33,5 +33,5 @@ app.add_middleware(
     allow_methods=["GET", "POST", "DELETE"],
     allow_headers=["Authorization", "Content-Type"],
 )
-for router in (health.router, config.router, public.router, conversations.router, attachments.router, runs.router):
+for router in (health.router, config.router, public.router, conversations.router, attachments.router, runs.router, admin.router):
     app.include_router(router)

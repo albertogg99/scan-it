@@ -3,13 +3,14 @@ from datetime import datetime, timezone
 from time import monotonic
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.mcp_adapter.client import connect
 from app.persistence.models import MCPServer
 from app.persistence.session import get_session
-from app.registry.service import resolve_server
+from app.registry.service import error, resolve_server
 from app.settings import Settings, get_settings
 
 router = APIRouter(prefix="/api/public/mcps")
@@ -22,6 +23,7 @@ def _public(server: MCPServer) -> dict:
         "enabled": server.enabled, "transport": "streamable-http",
         "public_endpoint": server.public_url,
         "requires_credentials": server.auth_type != "none",
+        "icon_url": f"/api/public/mcps/{server.id}/icon?v={server.updated_at.isoformat()}" if server.icon_mime else None,
     }
 
 
@@ -51,3 +53,14 @@ async def server_health(server_id: str, session: AsyncSession = Depends(get_sess
     result = {"reachable": reachable, "checked_at": datetime.now(timezone.utc).isoformat()}
     _health_cache[server.id] = (monotonic(), result)
     return result
+
+
+@router.get("/{server_id}/icon")
+async def server_icon(server_id: str, session: AsyncSession = Depends(get_session)):
+    result = (await session.execute(select(MCPServer.icon_data, MCPServer.icon_mime).where(MCPServer.id == server_id))).first()
+    if not result or not result.icon_data or not result.icon_mime:
+        raise error(404, "icon_not_found", "MCP icon not found.")
+    return Response(content=result.icon_data, media_type=result.icon_mime, headers={
+        "Content-Security-Policy": "default-src 'none'; style-src 'none'; sandbox",
+        "X-Content-Type-Options": "nosniff", "Cache-Control": "no-cache",
+    })

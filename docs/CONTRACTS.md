@@ -9,15 +9,14 @@ Implemented API and persistence reference; when documentation disagrees with dep
 
 ```
 docker-compose.yml  .env.example  README.md  .gitignore
-seed/registry.yaml
 postgres/init/01-keycloak-db.sql
 keycloak/realm/swiss-discover-realm.json
 keycloak/themes/swiss-discover/login/...         (FreeMarker + CSS, parent keycloak theme)
 backend/            pyproject.toml, Dockerfile, alembic.ini, alembic/, app/, tests/
   app/main.py  app/settings.py
-  app/api/          routers: public.py conversations.py runs.py attachments.py config.py health.py
-  app/auth/         JWT validation (JWKS), current_user dependency
-  app/registry/     service/seed loader/SSRF host check
+  app/api/          routers: admin.py public.py conversations.py runs.py attachments.py config.py health.py
+  app/auth/         JWT validation (JWKS), current_user/current_admin dependencies
+  app/registry/     entry validation, icon validation, SSRF host check
   app/mcp_adapter/  FastMCP client wrapper (prompts, tools, call)
   app/llm/          OpenAI-compatible streaming adapter + delta normalizer (reasoning/tool calls)
   app/agent/        agent loop, approval policy, run manager
@@ -43,7 +42,7 @@ frontend/           SvelteKit + TS, adapter-node, vitest
 frontend `http://${PUBLIC_HOST}:${FRONTEND_PORT}`, API `http://${PUBLIC_HOST}:${BACKEND_PORT}`, issuer `http://${PUBLIC_HOST}:${KEYCLOAK_PORT}/realms/swiss-discover`. Compose defaults these ports to 3000/8000/8080 and propagates overrides into issuer, realm import, CORS and frontend URLs. Existing realm clients require an explicit redirect/web-origin update after frontend host or port changes. PostgreSQL's host port is bound to loopback.
 
 Backend env (all have safe defaults for local dev except secrets):
-`APP_NAME`, `DATABASE_URL` (`postgresql+asyncpg://...`; tests use `sqlite+aiosqlite://`), `LLM_BASE_URL` (`https://api.publicai.co/v1`), `LLM_MODEL` (`swiss-ai/apertus-v1.5-70b-thinking`), `LLM_API_KEY` or `SWISSCOM_API_KEY` or `PUBLIC_AI_API_KEY`, `LLM_USER_AGENT` (`SwissDiscover/0.1 (hackathon demo)`), `LLM_IMAGE_INPUT` (`supported|unsupported|unknown`, default `unknown`), `OIDC_ISSUER`, `OIDC_JWKS_URL` (internal in Compose, e.g. `http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs`), `OIDC_AUDIENCE` (`swiss-discover-api`), `CORS_ORIGINS` (comma list), `MCP_ALLOWED_HOSTS` (default `zurich-transit,museum-guide,localhost,127.0.0.1`), `REGISTRY_SEED_PATH` (`/app/seed/registry.yaml`), `MUSEUM_GUIDE_TOKEN`, `USE_OS_TRUSTSTORE` (default false), limits `MAX_TOOL_ROUNDS=6`, `TOOL_TIMEOUT_S=20`, `MCP_CONNECT_TIMEOUT_S=8`, `TOOL_OUTPUT_MAX_CHARS=8000`, `LLM_TIMEOUT_S=120`, `MAX_RESPONSE_CHARS=40000`, `APPROVAL_TIMEOUT_S=600`, `MAX_UPLOAD_BYTES=5242880`, `ALLOWED_IMAGE_MIME=image/png,image/jpeg,image/webp,image/gif`, `MAX_MESSAGE_CHARS=8000`.
+`APP_NAME`, `DATABASE_URL` (`postgresql+asyncpg://...`; tests use `sqlite+aiosqlite://`), `LLM_BASE_URL` (`https://api.publicai.co/v1`), `LLM_MODEL` (`swiss-ai/apertus-v1.5-70b-thinking`), `LLM_API_KEY` or `SWISSCOM_API_KEY` or `PUBLIC_AI_API_KEY`, `LLM_USER_AGENT` (`SwissDiscover/0.1 (hackathon demo)`), `LLM_IMAGE_INPUT` (`supported|unsupported|unknown`, default `unknown`), `OIDC_ISSUER`, `OIDC_JWKS_URL` (internal in Compose, e.g. `http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs`), `OIDC_AUDIENCE` (`swiss-discover-api`), `CORS_ORIGINS` (comma list), `MCP_ALLOWED_HOSTS` (default `zurich-transit,museum-guide,localhost,127.0.0.1`), `MUSEUM_GUIDE_TOKEN`, `USE_OS_TRUSTSTORE` (default false), limits `MAX_TOOL_ROUNDS=6`, `TOOL_TIMEOUT_S=20`, `MCP_CONNECT_TIMEOUT_S=8`, `TOOL_OUTPUT_MAX_CHARS=8000`, `LLM_TIMEOUT_S=120`, `MAX_RESPONSE_CHARS=40000`, `APPROVAL_TIMEOUT_S=600`, `MAX_UPLOAD_BYTES=5242880`, `ALLOWED_IMAGE_MIME=image/png,image/jpeg,image/webp,image/gif`, `MAX_MESSAGE_CHARS=8000`.
 
 Backend key precedence is `LLM_API_KEY` > `SWISSCOM_API_KEY` > `PUBLIC_AI_API_KEY`; `USE_OS_TRUSTSTORE=true` is optional only where the OS trust store is required for HTTPS (never use `verify=False`). The historical Swisscom probe used a key named `PUBLIC_AI_API_KEY`; the default Public AI endpoint rejected it with HTTP 401. See `PROVIDER.md`.
 
@@ -58,37 +57,20 @@ Python: 3.12 in Docker (`python:3.12-slim`); local dev via `uv venv --python 3.1
 - Env placeholders in realm JSON use Keycloak import substitution `${ENV_VAR}`.
 - `KC_HOSTNAME=http://${PUBLIC_HOST}:${KEYCLOAK_PORT}`, `KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true` so the backend can fetch JWKS at `http://keycloak:8080` while tokens carry the public issuer. Admin creds via `KC_BOOTSTRAP_ADMIN_USERNAME/PASSWORD` env only.
 - Browser PKCE: plain-HTTP LAN origins are not secure contexts, so `crypto.subtle` is unavailable. The frontend uses a small own PKCE client with SHA-256 fallback (`@noble/hashes`) and `crypto.getRandomValues`.
-- Frontend discovers Keycloak endpoints, verifies the ID token (RS256, issuer, audience, expiry and callback nonce), keeps tokens in browser `sessionStorage`, refreshes them when needed, and sends bearer **access** tokens to the API. The backend validates RS256 JWKS, issuer, `swiss-discover-api` audience and `sub`; it is not an OAuth authorization server for MCP clients. Keycloak admin credentials do not sign in a demo user; self-registration is enabled.
+- Frontend discovers Keycloak endpoints, verifies the ID token (RS256, issuer, audience, expiry and callback nonce), keeps tokens in browser `sessionStorage`, refreshes them when needed, and sends bearer **access** tokens to the API. The backend validates RS256 JWKS, issuer, `swiss-discover-api` audience and `sub`; it is not an OAuth authorization server for MCP clients. Self-registration is enabled without admin membership.
+- A group mapper emits full paths in the access-token `groups` claim. `/api/admin/*` requires the exact `/admin` group (401 without valid authentication; 403 for non-admins). The app `admin` account is separate from the master-realm administrator. `SWISS_DISCOVER_ADMIN_PASSWORD` defaults to `admin` for trusted demos; it applies at account creation. The one-shot `keycloak-setup` service also provisions existing realms without resetting passwords.
 
-## Registry seed (`seed/registry.yaml`)
+## Registry administration
 
-`${VAR}` / `${VAR:-default}` substitution is applied when loading. Loaded (upserted by id) by `python -m app.registry.seed` after `alembic upgrade head` at backend start.
+The database is the source of truth. `/admin` manages entries and icons; fresh databases start empty and upgrades preserve existing rows. No seed loader runs at startup. A registry payload has `id`, `title`, `description`, `backend_url`, optional `public_url`, `auth`, `enabled`, and `approval_policy`. IDs cannot be renamed.
 
-```yaml
-servers:
-  - id: zurich-transit
-    title: Zurich Transit (demo)
-    description: Fictional stop lookup and sample departures; no live transit data.
-    backend_url: ${ZURICH_TRANSIT_URL:-http://zurich-transit:8000/mcp}
-    public_url: ${ZURICH_TRANSIT_PUBLIC_URL:-}
-    auth: { type: none }
-    enabled: true
-    approval_policy: ask_destructive
-  - id: museum-guide
-    title: Museum Guide (demo)
-    description: Guide to an invented demo exhibition with static exhibit notes.
-    backend_url: ${MUSEUM_GUIDE_URL:-http://museum-guide:8000/mcp}
-    public_url: ${MUSEUM_GUIDE_PUBLIC_URL:-}
-    auth: { type: bearer, credential_env: MUSEUM_GUIDE_TOKEN }
-    enabled: true
-    approval_policy: ask_destructive
-```
+`auth.type`: `none` | `bearer` (sends `Authorization: Bearer <env value>`) | `header` (`header_name` + `credential_env`). Only environment variable names are stored in the database, never secret values. `backend_url` must use HTTP(S) and an exactly allowed hostname from deployment-controlled `MCP_ALLOWED_HOSTS`; userinfo, query, fragment and whitespace are rejected. Every backend MCP connection rechecks the URL; outbound redirects and proxy environment handling are disabled. Adding registry rows does not deploy servers or extend the host allowlist. Empty `public_url` becomes null; public endpoints are metadata only, not a proxy.
 
-`auth.type`: `none` | `bearer` (sends `Authorization: Bearer <env value>`) | `header` (`header_name` + `credential_env`). Only env var names are stored in DB, never values. `backend_url` must be `http(s)` with an exactly allowed hostname from `MCP_ALLOWED_HOSTS`; userinfo, query, fragment and whitespace are rejected. Seed validates entries and every backend MCP connect rechecks the URL; outbound MCP redirects and proxy environment handling are disabled. The allowlist is controlled by the trusted administrator, **not** by users or untrusted seed input. Add only known server hostnames when changing endpoints; it is an SSRF boundary, not a license to allow arbitrary hosts. Empty `public_url` → null; public endpoints are metadata only, not a backend proxy.
+Icons are uploaded separately, stored in PostgreSQL, and served publicly with `nosniff` and a sandboxed CSP. Maximum upload is 1 MB. PNGs are decoded/re-encoded and limited to 2048px; SVGs allow only static shapes, safe attributes, and local fragment references, with no DTDs, scripts, styles, or external resources.
 
 ## Database (SQLAlchemy 2 async, Alembic; portable types so tests run on SQLite)
 
-- `mcp_servers`: `id` text PK (`^[a-z0-9][a-z0-9-]{1,62}$`), `title`, `description`, `backend_url`, `public_url` null, `auth_type`, `auth_header_name` null, `credential_env` null, `enabled` bool, `approval_policy` (`auto|ask_always|ask_destructive`), `created_at`, `updated_at`.
+- `mcp_servers`: `id` text PK (`^[a-z0-9][a-z0-9-]{1,62}$`), `title`, `description`, `backend_url`, `public_url` null, `auth_type`, `auth_header_name` null, `credential_env` null, `enabled` bool, `approval_policy` (`auto|ask_always|ask_destructive`), `icon_mime` null, `icon_data` binary null, `created_at`, `updated_at`.
 - `conversations`: `id` uuid PK, `user_sub` text indexed, `mcp_id` FK → mcp_servers (restrict), `title` text, `context_snapshot` text, `context_sha256` text, `tools_snapshot` JSON (list of `{name, description, input_schema, annotations, requires_approval}`), `created_at`, `updated_at`.
 - `messages`: `id` uuid PK, `conversation_id` FK cascade, `seq` int, `role` (`user|assistant`), `content` text, `reasoning` text null, `parts` JSON (assistant: ordered `{type:"reasoning",text}|{type:"text",text}|{type:"tool_call",tool_call_id}`), `llm_messages` JSON null (assistant: exact OpenAI-format messages appended during that run, for replay; reasoning never replayed), `status` (`streaming|completed|failed|cancelled`), `error` JSON null (`{code,message}`), `created_at`.
 - `tool_calls`: `id` uuid PK, `conversation_id` FK cascade, `message_id` FK cascade, `round` int, `provider_call_id` text, `name`, `arguments` JSON null, `arguments_raw` text, `requires_approval` bool, `status` (`pending_approval|approved|denied|running|succeeded|failed`), `result` text null, `truncated` bool, `error` text null, `decided_at` null, `created_at`.
@@ -104,12 +86,20 @@ Error body always `{"detail": {"code": "<snake_code>", "message": "<user-safe te
 Public:
 - `GET /api/health` → `{status:"ok"}`
 - `GET /api/config/public` → `{app_name, llm_configured: bool, image_input: "supported"|"unsupported"|"unknown"}`
-- `GET /api/public/mcps/{id}` → `{id, title, description, enabled, transport:"streamable-http", public_endpoint: str|null, requires_credentials: bool}`; 404 `mcp_not_found`; disabled → 403 `mcp_disabled`. Never returns backend_url or credential names.
+- `GET /api/public/mcps/{id}` → `{id, title, description, enabled, transport:"streamable-http", public_endpoint: str|null, requires_credentials: bool, icon_url: str|null}`; 404 `mcp_not_found`; disabled → 403 `mcp_disabled`. Never returns backend_url or credential names.
+- `GET /api/public/mcps` returns enabled entries; `GET /api/public/mcps/{id}/icon` serves the icon, or 404 when absent.
 - `GET /api/public/mcps/{id}/health` → `{reachable: bool, checked_at}` (initialize with timeout, cached 30 s).
+
+Admin group only:
+- `GET /api/admin/mcps` returns `{servers, allowed_hosts}`, including disabled entries and credential environment variable names, never values.
+- `POST /api/admin/mcps` creates an entry (201); duplicate ID returns 409.
+- `POST /api/admin/mcps/{id}` updates an entry; invalid configuration returns 422.
+- `DELETE /api/admin/mcps/{id}` returns 204, or 409 when conversation history exists. Disable such entries instead.
+- `POST /api/admin/mcps/{id}/icon` accepts multipart `file`; invalid images return 422. `DELETE` removes the icon (204).
 
 Authenticated:
 - `GET /api/conversations` → `[ConversationSummary]` newest first.
-- `POST /api/conversations` `{mcp_id}` → 201 `ConversationDetail`. Fetches `general_context` via `prompts/get` (no args) and `tools/list`, snapshots both. Errors: 404 `mcp_not_found`, 403 `mcp_disabled`, 502 `mcp_unavailable`, 422 `context_prompt_missing` | `context_prompt_invalid` | `context_prompt_requires_arguments`.
+- `POST /api/conversations` `{mcp_id}` → 201 `ConversationDetail`. Snapshots the MCP initialization response's `instructions` and `tools/list`. Missing instructions produce an empty context. No prompt APIs or tools are invoked during discovery. Errors: 404 `mcp_not_found`, 403 `mcp_disabled`, 502 `mcp_unavailable`.
 - `GET /api/conversations/{id}` → `ConversationDetail`; `DELETE` → 204 (409 `run_in_progress` if a run is active → cancel first).
 - `POST /api/conversations/{id}/messages` `{text, attachment_ids: [uuid]}` → 202 `{run_id, user_message_id, assistant_message_id}`; 409 `run_in_progress`; 422 `message_invalid`; 503 `llm_not_configured`; 422 `image_input_unsupported` if images sent while unsupported.
 - `GET /api/runs/{run_id}/events?after=<seq>` → `text/event-stream` (see below). 404 if run unknown or not owned.

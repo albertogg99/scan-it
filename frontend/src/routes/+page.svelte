@@ -3,9 +3,10 @@
   import { goto } from '$app/navigation';
   import { ArrowUpRight, TrainFront, Landmark, Blocks, Search, X } from 'lucide-svelte';
   import { publicMcps } from '$lib/api/client';
+  import { apiBase } from '$lib/config/runtime';
   import { ui } from '$lib/ui';
   const { t } = ui();
-  type App = { id: string; title: string; description: string };
+  type App = { id: string; title: string; description: string; icon_url?: string | null };
   const icons: Record<string, typeof Blocks> = { 'zurich-transit': TrainFront, 'museum-guide': Landmark };
   let apps = $state<App[]>([]);
   let status = $state<'loading' | 'ready' | 'error'>('loading');
@@ -66,9 +67,13 @@
   <div class="demo-list" id="app-results" aria-live="polite">
     {#each ranked as app, index (app.id)}
       {@const Icon = icons[app.id] ?? Blocks}
-      <a href="/m/{app.id}" class="demo-row" class:active={query && index === active}><Icon size={27} strokeWidth={1.5} /><div class="demo-text"><strong>{app.title}</strong>{#if app.description}<small>{app.description}</small>{/if}</div><span>{t('open')} <ArrowUpRight size={19} /></span></a>
+      <a href="/m/{app.id}" class="demo-row" class:active={query && index === active}>{#if app.icon_url}<img class="mcp-icon" src={`${apiBase()}${app.icon_url}`} alt="" width="32" height="32" />{:else}<Icon size={27} strokeWidth={1.5} />{/if}<div class="demo-text"><strong>{app.title}</strong>{#if app.description}<small>{app.description}</small>{/if}</div><span>{t('open')} <ArrowUpRight size={19} /></span></a>
     {:else}
       <p class="demo-empty muted">{t(status === 'loading' ? 'loading' : status === 'error' ? 'unavailable' : 'noResults')}</p>
     {/each}
   </div>
 </section>
+
+<style>
+  .mcp-icon { object-fit: contain; flex: 0 0 32px; }
+</style>

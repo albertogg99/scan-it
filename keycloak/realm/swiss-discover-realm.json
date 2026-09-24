@@ -10,6 +10,19 @@
   "internationalizationEnabled": true,
   "supportedLocales": ["en", "de", "fr", "it"],
   "defaultLocale": "en",
+  "groups": [{ "name": "admin" }],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "firstName": "Swiss",
+      "lastName": "Administrator",
+      "email": "admin@swiss-discover.local",
+      "emailVerified": true,
+      "groups": ["/admin"],
+      "credentials": [{ "type": "password", "value": "${SWISS_DISCOVER_ADMIN_PASSWORD}", "temporary": false }]
+    }
+  ],
   "clients": [
     {
       "clientId": "swiss-discover-web",
@@ -27,6 +40,19 @@
         "post.logout.redirect.uris": "+"
       },
       "protocolMappers": [
+        {
+          "name": "swiss-discover-groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
         {
           "name": "swiss-discover-api-audience",
           "protocol": "openid-connect",

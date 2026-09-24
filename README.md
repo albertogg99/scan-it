@@ -25,9 +25,26 @@ docker compose logs backend keycloak
 docker compose down
 ```
 
-Compose starts PostgreSQL, Keycloak (realm import), both MCP servers, then runs `alembic upgrade head` and `python -m app.registry.seed` before uvicorn; frontend follows backend health. Open `http://localhost:3000` (or `http://<PUBLIC_HOST>:3000`). Register a user through the Keycloak sign-in screen; the admin login is for Keycloak administration, not a demo user. `docker compose down` preserves the database volume; `down -v` deletes it, including chat history. Docker/real Keycloak/Postgres live E2E is **deferred until the user reboots**; no successful integrated run is implied here.
+Compose starts PostgreSQL, Keycloak, a one-shot `keycloak-setup` service, and both MCP servers, then runs `alembic upgrade head` before uvicorn; frontend follows backend health. Open `http://localhost:3000` (or the configured host/port). Register ordinary users through Keycloak. Fresh databases have an empty registry; configure MCP entries at `/admin`. Existing registry entries survive upgrades and are never overwritten at startup. `docker compose down` preserves the database volume; `down -v` deletes it, including registry entries, icons, users, and chat history.
 
 Default host ports: frontend 3000, API 8000, Keycloak 8080, PostgreSQL 5433 on loopback, transit MCP 8101, museum MCP 8102. Compose propagates `FRONTEND_PORT`, `BACKEND_PORT`, and `KEYCLOAK_PORT` into browser URLs, the issuer, CORS, and the initial realm import. Open `http://<PUBLIC_HOST>:<FRONTEND_PORT>` and allow the configured frontend/API/Keycloak ports through the firewall. Changing the frontend port or hostname after the realm exists also requires updating the `swiss-discover-web` client's redirect URIs and web origins in Keycloak; restarting does not reimport an existing realm. `localhost` on a phone is the phone. Keycloak's plain HTTP `start-dev` and static MCP token are only for a trusted local demo, not internet exposure.
+
+## MCP administration
+
+Open `/admin` and sign in as `admin` with password `admin`, or the value of `SWISS_DISCOVER_ADMIN_PASSWORD` set before account creation. This is an application account in the `swiss-discover` realm, separate from the master-realm Keycloak administrator. Change the demo password before exposing this service beyond a trusted demo. The setup service creates missing groups, the access-token group mapper, and the account on existing installations too; it does not reset existing passwords. Change an existing password in the Keycloak console.
+
+Any user can sign in, but only membership in the exact `/admin` group grants access to registry APIs. Grant additional users that group in Keycloak and sign in again to obtain a fresh token. Self-registration never grants admin membership.
+
+The form creates, edits, disables, and deletes MCP entries and uploads SVG/PNG icons for the main directory. Entries with conversation history cannot be deleted; disable them instead. Icons are stored in PostgreSQL, limited to 1 MB, and validated (PNG up to 2048px; plain SVG without styles, scripts, or external references). The registry seed folder and startup loader are no longer used.
+
+To register the bundled containers:
+
+| ID | Backend endpoint | Authentication |
+|---|---|---|
+| `zurich-transit` | `http://zurich-transit:8000/mcp` | None |
+| `museum-guide` | `http://museum-guide:8000/mcp` | Bearer, environment variable `MUSEUM_GUIDE_TOKEN` |
+
+For native processes, use `http://localhost:8101/mcp` and `http://localhost:8102/mcp`. Enter a public endpoint separately when it is safe to disclose and reachable by external clients. Registry changes take effect without rebuilding containers. Registering an MCP does not create or deploy its server container. For a new hostname, add it to `MCP_ALLOWED_HOSTS` in `.env` and recreate the backend first. Credential fields store environment variable names only; any new secret must be passed into the backend container environment. Chat snapshots server initialization instructions and tools when a conversation is created; existing conversations retain their snapshots.
 
 ## Windows native (no Docker)
 
@@ -47,9 +64,6 @@ $env:OIDC_ISSUER = 'http://localhost:8080/realms/swiss-discover'
 $env:OIDC_JWKS_URL = 'http://localhost:8080/realms/swiss-discover/protocol/openid-connect/certs'
 $env:CORS_ORIGINS = 'http://localhost:3000'
 $env:MCP_ALLOWED_HOSTS = 'localhost,127.0.0.1'
-$env:REGISTRY_SEED_PATH = (Resolve-Path seed/registry.yaml).Path
-$env:ZURICH_TRANSIT_URL = 'http://localhost:8101/mcp'
-$env:MUSEUM_GUIDE_URL = 'http://localhost:8102/mcp'
 $env:MUSEUM_GUIDE_TOKEN = '<YOUR-MUSEUM-TOKEN>'
 $env:LLM_BASE_URL = 'https://api.swisscom.com/products/swiss-ai-weeks/apertus-1.5-70b/v1'
 $env:LLM_MODEL = 'swiss-ai/Apertus-v1.5-70B'
@@ -57,12 +71,11 @@ $env:LLM_API_KEY = '<YOUR-PROVIDER-KEY>'
 uv sync --project backend --python 3.12
 Push-Location backend
 uv run alembic upgrade head
-uv run python -m app.registry.seed
 uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 Pop-Location
 ```
 
-Start Keycloak 26.1 in a separate terminal **before** backend migration/seed and uvicorn (wait for Keycloak and MCP readiness). Set `KC_HOME` to the extracted Keycloak directory and substitute your own database/admin secrets. The realm import is only applied on first creation; edits to the JSON do not replace an existing realm.
+Start Keycloak 26.1 in a separate terminal **before** backend migration and uvicorn (wait for Keycloak and MCP readiness). Set `KC_HOME` to the extracted Keycloak directory and substitute your own database/admin secrets. The realm import is only applied on first creation; edits to the JSON do not replace an existing realm.
 
 ```powershell
 $env:KC_HOME = 'C:\path\to\keycloak-26.1.0'
@@ -72,6 +85,7 @@ $env:KC_DB_USERNAME = 'postgres'
 $env:KC_DB_PASSWORD = '<YOUR-DB-PASSWORD>'
 $env:KC_BOOTSTRAP_ADMIN_USERNAME = 'admin'
 $env:KC_BOOTSTRAP_ADMIN_PASSWORD = '<YOUR-ADMIN-PASSWORD>'
+$env:SWISS_DISCOVER_ADMIN_PASSWORD = '<YOUR-APP-ADMIN-PASSWORD>'
 $env:KC_HOSTNAME = 'http://localhost:8080'
 $env:KC_HOSTNAME_BACKCHANNEL_DYNAMIC = 'true'
 $env:PUBLIC_HOST = 'localhost'
@@ -108,4 +122,4 @@ npm run dev -- --host 0.0.0.0 --port 3000
 Pop-Location
 ```
 
-Open `http://localhost:3000`, choose a demo, sign up in Keycloak, then start chat. Stop native foreground processes with Ctrl+C in each terminal; stop PostgreSQL with `Stop-Service postgresql-x64-16` (or your actual service name) after the other services stop. The native backend uses **one** uvicorn worker: persisted runs/events permit reconnect, not job resumption; restart marks interrupted runs failed without rerunning tools. See [WALKTHROUGH](docs/WALKTHROUGH.md) for the user flow.
+For an existing native realm, run `scripts/provision_keycloak_admin.py` with `KEYCLOAK_INTERNAL_URL=http://localhost:8080`, `KEYCLOAK_REALM_FILE` pointing to the realm JSON, and `KEYCLOAK_ADMIN_USERNAME`, `KEYCLOAK_ADMIN_PASSWORD`, and `SWISS_DISCOVER_ADMIN_PASSWORD` in that process environment. Then open `/admin` to register the demos. Ordinary users can sign up and start chat from the main directory. Stop native foreground processes with Ctrl+C in each terminal; stop PostgreSQL after the other services stop. The native backend uses **one** uvicorn worker: persisted runs/events permit reconnect, not job resumption; restart marks interrupted runs failed without rerunning tools. See [WALKTHROUGH](docs/WALKTHROUGH.md) for the user flow.

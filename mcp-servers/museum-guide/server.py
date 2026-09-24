@@ -10,7 +10,14 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 
-mcp = FastMCP("Museum Guide (demo)")
+mcp = FastMCP("Museum Guide (demo)", instructions=(
+    "Museum Guide is a fictional demo exhibition. Its exhibit catalog and suggested visit "
+    "durations are static sample content, not live museum hours, availability, accessibility "
+    "information, ticketing, or reservations. Use list_exhibits for the catalog, exhibit_details "
+    "for one work, and plan_visit to calculate a suggested route without saving visitor data. "
+    "Never claim a real venue or live status. Give durations in minutes and answer in the "
+    "visitor's language while keeping exhibit titles in their original form."
+))
 CATALOG = {
     "signal-room": {
         "title": "Signal Room", "gallery": "North Hall", "duration_minutes": 12,
@@ -26,18 +33,6 @@ CATALOG = {
     },
 }
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False)
-
-
-@mcp.prompt(name="general_context")
-def general_context() -> str:
-    return (
-        "Museum Guide is a fictional demo exhibition. Its exhibit catalog and suggested visit "
-        "durations are static sample content, not live museum hours, availability, accessibility "
-        "information, ticketing, or reservations. Use list_exhibits for the catalog, exhibit_details "
-        "for one work, and plan_visit to calculate a suggested route without saving visitor data. "
-        "Never claim a real venue or live status. Give durations in minutes and answer in the "
-        "visitor's language while keeping exhibit titles in their original form."
-    )
 
 
 @mcp.tool(annotations=READ_ONLY)

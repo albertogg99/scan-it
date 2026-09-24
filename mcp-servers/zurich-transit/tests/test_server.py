@@ -8,15 +8,14 @@ import server
 
 
 @pytest.mark.asyncio
-async def test_discovery_prompt_and_demo_tools(monkeypatch):
+async def test_discovery_instructions_and_demo_tools(monkeypatch):
     async def no_network(*args, **kwargs):
         raise AssertionError("Transit tools must not use external HTTP")
 
     monkeypatch.setattr(httpx.AsyncClient, "get", no_network)
     async with Client(server.mcp) as client:
-        assert "general_context" in {prompt.name for prompt in await client.list_prompts()}
-        prompt = await client.get_prompt("general_context")
-        assert prompt.messages and "not real-time" in prompt.messages[0].content.text
+        assert "not real-time" in client.initialize_result.instructions
+        assert await client.list_prompts() == []
         tools = {tool.name: tool for tool in await client.list_tools()}
         assert {"search_stops", "departures"} == tools.keys()
         assert all(tool.annotations.readOnlyHint is True and tool.annotations.openWorldHint is False for tool in tools.values())

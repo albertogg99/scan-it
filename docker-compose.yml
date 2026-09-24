@@ -33,6 +33,7 @@ services:
       KC_HEALTH_ENABLED: "true"
       PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
       FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+      SWISS_DISCOVER_ADMIN_PASSWORD: ${SWISS_DISCOVER_ADMIN_PASSWORD:-admin}
     ports:
       - "${KEYCLOAK_PORT:-8080}:8080"
     volumes:
@@ -48,6 +49,21 @@ services:
       retries: 18
       start_period: 45s
     restart: unless-stopped
+
+  keycloak-setup:
+    image: python:3.12-alpine
+    command: ["python", "/setup/provision_keycloak_admin.py"]
+    environment:
+      KEYCLOAK_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:?Set KEYCLOAK_ADMIN_USERNAME in .env}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env}
+      SWISS_DISCOVER_ADMIN_PASSWORD: ${SWISS_DISCOVER_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./scripts/provision_keycloak_admin.py:/setup/provision_keycloak_admin.py:ro
+      - ./keycloak/realm/swiss-discover-realm.json:/setup/realm.json:ro
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    restart: "no"
 
   zurich-transit:
     build: ./mcp-servers/zurich-transit
@@ -84,7 +100,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    command: ["sh", "-ec", "alembic upgrade head && python -m app.registry.seed && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+    command: ["sh", "-ec", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     environment:
       APP_NAME: Swiss Discover
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/swiss_discover
@@ -99,12 +115,7 @@ services:
       OIDC_JWKS_URL: http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs
       OIDC_AUDIENCE: swiss-discover-api
       CORS_ORIGINS: http://${PUBLIC_HOST:-localhost}:${FRONTEND_PORT:-3000},http://localhost:${FRONTEND_PORT:-3000}
-      MCP_ALLOWED_HOSTS: zurich-transit,museum-guide,localhost,127.0.0.1
-      REGISTRY_SEED_PATH: /app/seed/registry.yaml
-      ZURICH_TRANSIT_URL: ${ZURICH_TRANSIT_URL:-http://zurich-transit:8000/mcp}
-      ZURICH_TRANSIT_PUBLIC_URL: ${ZURICH_TRANSIT_PUBLIC_URL:-http://${PUBLIC_HOST:-localhost}:8101/mcp}
-      MUSEUM_GUIDE_URL: ${MUSEUM_GUIDE_URL:-http://museum-guide:8000/mcp}
-      MUSEUM_GUIDE_PUBLIC_URL: ${MUSEUM_GUIDE_PUBLIC_URL:-http://${PUBLIC_HOST:-localhost}:8102/mcp}
+      MCP_ALLOWED_HOSTS: ${MCP_ALLOWED_HOSTS:-zurich-transit,museum-guide,localhost,127.0.0.1,10.10.52.203}
       MUSEUM_GUIDE_TOKEN: ${MUSEUM_GUIDE_TOKEN:?Set MUSEUM_GUIDE_TOKEN in .env}
       MAX_TOOL_ROUNDS: "6"
       TOOL_TIMEOUT_S: "20"
@@ -118,13 +129,13 @@ services:
       MAX_MESSAGE_CHARS: "8000"
     ports:
       - "${BACKEND_PORT:-8000}:8000"
-    volumes:
-      - ./seed:/app/seed:ro
     depends_on:
       postgres:
         condition: service_healthy
       keycloak:
         condition: service_healthy
+      keycloak-setup:
+        condition: service_completed_successfully
       zurich-transit:
         condition: service_healthy
       museum-guide:

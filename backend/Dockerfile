@@ -7,4 +7,4 @@ COPY backend/alembic/ ./alembic/
 COPY backend/alembic.ini ./
 RUN uv sync --frozen --no-dev
 ENV PATH="/app/backend/.venv/bin:$PATH"
-CMD ["sh", "-c", "alembic upgrade head && python -m app.registry.seed && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]

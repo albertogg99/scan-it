@@ -30,6 +30,8 @@ class MCPServer(Base):
     credential_env: Mapped[str | None] = mapped_column(String(128))
     enabled: Mapped[bool] = mapped_column(Boolean, default=True)
     approval_policy: Mapped[str] = mapped_column(String(32), default="ask_destructive")
+    icon_mime: Mapped[str | None] = mapped_column(String(32))
+    icon_data: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 

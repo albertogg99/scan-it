@@ -7,11 +7,10 @@ import server
 
 
 @pytest.mark.asyncio
-async def test_discovery_prompt_and_tools():
+async def test_discovery_instructions_and_tools():
     async with Client(server.mcp) as client:
-        assert "general_context" in {prompt.name for prompt in await client.list_prompts()}
-        prompt = await client.get_prompt("general_context")
-        assert prompt.messages and "static" in prompt.messages[0].content.text
+        assert "static" in client.initialize_result.instructions
+        assert await client.list_prompts() == []
         tools = {tool.name: tool for tool in await client.list_tools()}
         assert {"list_exhibits", "exhibit_details", "plan_visit"} == tools.keys()
         assert all(tool.annotations.readOnlyHint is True for tool in tools.values())
@@ -42,12 +41,12 @@ async def test_optional_bearer_and_health(monkeypatch):
                 ),
             )
             async with Client(transport) as mcp_client:
-                authenticated_prompts = {prompt.name for prompt in await mcp_client.list_prompts()}
+                authenticated_instructions = mcp_client.initialize_result.instructions
             monkeypatch.delenv("MUSEUM_GUIDE_TOKEN", raising=False)
             anonymous = await client.post("/mcp", json={})
     assert health.status_code == 200
     assert missing.status_code == wrong.status_code == 401
     assert allowed.status_code == 401
     assert authorized.status_code != 401
-    assert "general_context" in authenticated_prompts
+    assert "fictional demo exhibition" in authenticated_instructions
     assert anonymous.status_code != 401

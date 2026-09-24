@@ -20,6 +20,9 @@ class TokenValidator:
         self._expires_at = 0.0
 
     async def validate(self, token: str, settings: Settings) -> str:
+        return (await self.validate_claims(token, settings))["sub"]
+
+    async def validate_claims(self, token: str, settings: Settings) -> dict:
         unauthorized = error(401, "unauthorized", "Valid authentication is required.")
         try:
             header = jwt.get_unverified_header(token)
@@ -42,7 +45,7 @@ class TokenValidator:
             subject = claims["sub"]
             if not isinstance(subject, str) or not subject:
                 raise unauthorized
-            return subject
+            return claims
         except Exception as exc:
             raise unauthorized from exc
 
@@ -57,3 +60,16 @@ async def current_user(
     if not credentials or credentials.scheme.lower() != "bearer":
         raise error(401, "unauthorized", "Valid authentication is required.")
     return await validator.validate(credentials.credentials, settings)
+
+
+async def current_admin(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
+    settings: Settings = Depends(get_settings),
+) -> str:
+    if not credentials or credentials.scheme.lower() != "bearer":
+        raise error(401, "unauthorized", "Valid authentication is required.")
+    claims = await validator.validate_claims(credentials.credentials, settings)
+    groups = claims.get("groups", [])
+    if not isinstance(groups, list) or "/admin" not in groups:
+        raise error(403, "admin_required", "Membership in the admin group is required.")
+    return claims["sub"]

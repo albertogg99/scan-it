@@ -21,7 +21,6 @@ class Settings(BaseSettings):
     oidc_audience: str = "swiss-discover-api"
     cors_origins: str = "http://localhost:3000"
     mcp_allowed_hosts: str = "zurich-transit,museum-guide,localhost,127.0.0.1"
-    registry_seed_path: str = "/app/seed/registry.yaml"
     max_tool_rounds: int = 6
     tool_timeout_s: int = 20
     mcp_connect_timeout_s: int = 8

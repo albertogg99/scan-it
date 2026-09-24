@@ -5,6 +5,8 @@ The independent Python 3.12 services live in `mcp-servers/zurich-transit` and
 listen on port 8000 inside their own container, and serve `GET /health` with
 `{"status":"ok"}`. Docker host ports are 8101 (transit) and 8102 (museum)
 per the shared contracts. Neither endpoint needs a database or model key.
+Both publish context using `FastMCP(..., instructions=...)` in the MCP
+initialization response. They do not expose a `general_context` prompt.
 
 From the repository root, use uv for local development (run the two commands
 in separate terminals):

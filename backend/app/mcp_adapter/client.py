@@ -64,20 +64,8 @@ async def connect(server: MCPServer, settings: Settings):
 
 async def discover(server: MCPServer, settings: Settings) -> tuple[str, str, list[dict]]:
     async with connect(server, settings) as client:
-        prompts = await client.list_prompts()
-        prompt = next((item for item in prompts if item.name == "general_context"), None)
-        if prompt is None:
-            raise error(422, "context_prompt_missing", "MCP server has no general_context prompt.")
-        if prompt.arguments and any(argument.required for argument in prompt.arguments):
-            raise error(422, "context_prompt_requires_arguments", "general_context requires arguments.")
-        try:
-            result = await client.get_prompt("general_context", arguments={})
-        except Exception as exc:
-            raise error(422, "context_prompt_invalid", "Could not load general_context.") from exc
-        texts = [message.content.text for message in result.messages if message.content.type == "text" and message.content.text.strip()]
-        if not texts:
-            raise error(422, "context_prompt_invalid", "general_context contains no text.")
-        context = "\n".join(texts)
+        initialized = client.initialize_result
+        context = initialized.instructions or "" if initialized else ""
         tools = await client.list_tools()
     snapshot = [
         {

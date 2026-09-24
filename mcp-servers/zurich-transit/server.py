@@ -10,7 +10,6 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 
 
-mcp = FastMCP("Zurich Transit (demo)")
 SOURCE = "static demo timetable"
 STOPS = (
     {"id": "8503000", "name": "Zürich HB", "latitude": 47.378, "longitude": 8.54},
@@ -38,15 +37,13 @@ def example_stops() -> list[str]:
     return [stop["name"] for stop in STOPS]
 
 
-@mcp.prompt(name="general_context")
-def general_context() -> str:
-    return (
-        "Zurich Transit is a fictional offline demo for stop lookup and sample departures. "
-        "Example stops: " + ", ".join(example_stops()) + ". "
-        "No tool contacts a transit provider. Routes, delays, and platforms are invented; "
-        "departure times are generated locally and are not real-time information. "
-        "Never present them as actual travel advice. Answer in the visitor's language."
-    )
+mcp = FastMCP("Zurich Transit (demo)", instructions=(
+    "Zurich Transit is a fictional offline demo for stop lookup and sample departures. "
+    "Example stops: " + ", ".join(example_stops()) + ". "
+    "No tool contacts a transit provider. Routes, delays, and platforms are invented; "
+    "departure times are generated locally and are not real-time information. "
+    "Never present them as actual travel advice. Answer in the visitor's language."
+))
 
 
 @mcp.tool(annotations=READ_ONLY)
