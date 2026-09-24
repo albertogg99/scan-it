@@ -18,6 +18,24 @@
                 "stdio"
             ]
         },
+        "basel-parking": {
+            "type": "stdio",
+            "command": "docker",
+            "args": [
+                "compose",
+                "--project-directory",
+                "${workspaceFolder}",
+                "run",
+                "--rm",
+                "--no-deps",
+                "-T",
+                "basel-parking",
+                "python",
+                "main.py",
+                "--transport",
+                "stdio"
+            ]
+        },
         "text-demo": {
             "type": "stdio",
             "command": "docker",

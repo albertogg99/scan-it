@@ -1,0 +1,5 @@
+basel_parking:
+  timeout_seconds: 15
+  cache_ttl_seconds: 30
+  freshness_seconds: 300
+  max_pages: 10

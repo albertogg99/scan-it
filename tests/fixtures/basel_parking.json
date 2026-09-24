@@ -1,0 +1,50 @@
+{
+  "total_count": 3,
+  "results": [
+    {
+      "title": "Parkhaus City",
+      "published": "2026-09-24T11:41:00+00:00",
+      "free": 188,
+      "total": 1114,
+      "link": "https://www.parkleitsystem-basel.ch/parkhaus/city",
+      "geo_point_2d": {"lon": 7.5824076, "lat": 47.561101},
+      "name": "City",
+      "id2": "city",
+      "id": "baselparkhauscity",
+      "status": "offen",
+      "last_downloaded": "2026-09-24T11:41:04+00:00",
+      "address": "Schanzenstrasse 48",
+      "lot_type": "Parkhaus"
+    },
+    {
+      "title": "Parkhaus Europe",
+      "published": "2026-09-24T11:41:00+00:00",
+      "free": 56,
+      "total": 120,
+      "link": "https://www.parkleitsystem-basel.ch/parkhaus/europe",
+      "geo_point_2d": {"lon": 7.5967098, "lat": 47.5630411},
+      "name": "Europe",
+      "id2": "europe",
+      "id": "baselparkhauseurope",
+      "status": "offen",
+      "last_downloaded": "2026-09-24T11:41:04+00:00",
+      "address": "Hammerstrasse 68",
+      "lot_type": "Parkhaus"
+    },
+    {
+      "title": "Parkhaus Post Basel",
+      "published": "2026-09-24T11:41:00+00:00",
+      "free": 77,
+      "total": null,
+      "link": "https://www.parkleitsystem-basel.ch/parkhaus/postbasel",
+      "geo_point_2d": {"lon": 7.5929374, "lat": 47.5468617},
+      "name": "Post Basel",
+      "id2": "postbasel",
+      "id": "baselparkhauspostbasel",
+      "status": "offen",
+      "last_downloaded": "2026-09-24T11:41:04+00:00",
+      "address": "Gartenstrasse 143",
+      "lot_type": "Parkhaus"
+    }
+  ]
+}

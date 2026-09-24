@@ -1,3 +1,4 @@
+import asyncio
 import importlib.util
 from pathlib import Path
 import subprocess
@@ -95,7 +96,53 @@ class RegistryTests(unittest.TestCase):
                 registry.main()
                 server_class.assert_called_once_with("zurich-hackathon", instructions=instructions)
                 register_tools.assert_called_once_with(server_class.return_value, self.root)
+                server_class.return_value.prompt.assert_called_once_with(name="general_context")
+                general_context = server_class.return_value.prompt.return_value.call_args.args[0]
+                self.assertEqual(general_context(), instructions)
                 self.assertEqual(server_class.return_value.run.call_args.kwargs["transport"], transport)
+
+    def test_main_skips_general_context_without_instructions(self):
+        instructions_path = self.root / "config" / "server_instructions.md"
+        for content in (None, "", " \n\t "):
+            with self.subTest(content=content):
+                if content is not None:
+                    instructions_path.write_text(content, encoding="utf-8")
+                with (
+                    patch.object(sys, "argv", ["main.py", "--server-dir", str(self.root), "--transport", "stdio"]),
+                    patch.object(registry.logging, "basicConfig"),
+                    patch.object(registry, "register_tools"),
+                    patch("mcp.server.mcpserver.MCPServer") as server_class,
+                ):
+                    registry.main()
+                    self.assertIsNone(server_class.call_args.kwargs["instructions"])
+                    server_class.return_value.prompt.assert_not_called()
+
+    def test_general_context_can_be_listed_and_retrieved_with_the_sdk(self):
+        from mcp.server.mcpserver import MCPServer
+
+        instructions = "Keep the user's language.\nPreserve accents such as \u00e9."
+        instructions_path = self.root / "config" / "server_instructions.md"
+        instructions_path.write_text(f"\n{instructions}\n", encoding="utf-8")
+        server = MCPServer("context-test")
+        with (
+            patch.object(sys, "argv", ["main.py", "--server-dir", str(self.root), "--transport", "stdio"]),
+            patch.object(registry.logging, "basicConfig"),
+            patch.object(registry, "register_tools"),
+            patch("mcp.server.mcpserver.MCPServer", return_value=server),
+            patch.object(server, "run"),
+        ):
+            registry.main()
+
+        prompts = asyncio.run(server.list_prompts())
+        self.assertEqual([prompt.name for prompt in prompts], ["general_context"])
+        self.assertEqual(prompts[0].arguments, [])
+
+        instructions_path.write_text("Changed after startup", encoding="utf-8")
+        result = asyncio.run(server.get_prompt("general_context"))
+        self.assertEqual(len(result.messages), 1)
+        self.assertEqual(result.messages[0].role, "user")
+        self.assertEqual(result.messages[0].content.type, "text")
+        self.assertEqual(result.messages[0].content.text, instructions)
 
     def test_main_selects_server_directory_from_cli_or_environment(self):
         server_dir = self.root / "another-server"
@@ -119,6 +166,9 @@ class RegistryTests(unittest.TestCase):
                 registry.main()
                 server_class.assert_called_once_with("Another MCP", instructions="Server-specific guidance")
                 register_tools.assert_called_once_with(server_class.return_value, server_dir)
+                server_class.return_value.prompt.assert_called_once_with(name="general_context")
+                general_context = server_class.return_value.prompt.return_value.call_args.args[0]
+                self.assertEqual(general_context(), "Server-specific guidance")
 
     def test_selected_server_controls_tools_configuration_and_packages(self):
         server_dir = self.root / "another-server"

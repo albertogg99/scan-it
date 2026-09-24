@@ -24,18 +24,28 @@ services:
   zurich-hackathon:
     <<: *dynamic-mcp
     ports:
-      - "127.0.0.1:${HACKATHON_PORT:-8555}:8555"
+      - "${HACKATHON_PORT:-8555}:8555"
     environment:
       <<: *mcp-environment
       MCP_SERVER_NAME: "Zurich Hackathon 2026"
     volumes:
       - ./servers/zurich-hackathon:/app/server:ro
 
+  basel-parking:
+    <<: *dynamic-mcp
+    ports:
+      - "${BASEL_PARKING_PORT:-8559}:8555"
+    environment:
+      <<: *mcp-environment
+      MCP_SERVER_NAME: "Basel Parking"
+    volumes:
+      - ./servers/basel-parking:/app/server:ro
+
   text-demo:
     <<: *dynamic-mcp
     profiles: [examples]
     ports:
-      - "127.0.0.1:${TEXT_DEMO_PORT:-8556}:8555"
+      - "${TEXT_DEMO_PORT:-8556}:8555"
     environment:
       <<: *mcp-environment
       MCP_SERVER_NAME: "Text Tools Demo"

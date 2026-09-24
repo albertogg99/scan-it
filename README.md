@@ -18,6 +18,14 @@ servers/
       __init__.py
       hackathon.py
       requirements/hackathon.txt
+  basel-parking/                 Live Basel-Stadt parking availability
+    config/
+      tools_config.yaml
+      server_instructions.md
+    tools/
+      __init__.py
+      basel_parking.py
+      requirements/basel_parking.txt
   text-demo/                    Original slugify example
     config/
       tools_config.yaml
@@ -39,10 +47,17 @@ docker compose up --build -d zurich-hackathon
 docker compose logs -f zurich-hackathon
 ```
 
-The hackathon endpoint is **http://localhost:8555/mcp**. It is also the default
-service when running `docker compose up --build -d` without a service name.
+The hackathon endpoint is **http://localhost:8555/mcp**. To start Basel parking:
 
-To run both bundled servers:
+```bash
+docker compose up --build -d basel-parking
+docker compose logs -f basel-parking
+```
+
+The parking endpoint is **http://localhost:8559/mcp**. Both production services
+start when running `docker compose up --build -d` without a service name.
+
+To run all three bundled servers, including the optional example:
 
 ```bash
 docker compose --profile examples up --build -d
@@ -51,13 +66,14 @@ docker compose --profile examples up --build -d
 The optional `text-demo` endpoint is **http://localhost:8556/mcp**. It exposes
 `slugify_text`, which converts `Hello Dynamic MCP!` to `hello-dynamic-mcp`.
 
-Set `HACKATHON_PORT` and `TEXT_DEMO_PORT` in `.env` to change the host ports, or use:
+Set `HACKATHON_PORT`, `BASEL_PARKING_PORT`, and `TEXT_DEMO_PORT` in `.env` to change
+the host ports, or use:
 
 ```bash
-HACKATHON_PORT=8655 TEXT_DEMO_PORT=8656 docker compose --profile examples up -d
+HACKATHON_PORT=8655 BASEL_PARKING_PORT=8659 TEXT_DEMO_PORT=8656 docker compose --profile examples up -d
 ```
 
-Both containers listen on port 8555 internally; their host ports must differ.
+All containers listen on port 8555 internally; their host ports must differ.
 Stop the services with `docker compose --profile examples down`.
 
 When migrating a running single-server checkout, stop the old `dynamic-mcp`
@@ -103,10 +119,41 @@ domains. Callers select a configured topic rather than supplying arbitrary URLs;
 HTTP redirects are not followed. HTTPS uses the system CA store with certificate
 verification enabled.
 
+## Basel Parking Availability
+
+The parking server reads the official Basel-Stadt dataset
+https://data.bs.ch/explore/dataset/100088/ through its JSON API. It exposes four
+read-only tools:
+
+| Tool | Purpose |
+| --- | --- |
+| `list_parking_facilities(query="")` | List facilities, optionally filtering IDs, names, titles, or addresses. |
+| `get_parking_status(parking_id)` | Get reported counts, status, source timestamps, and data-quality warnings for one exact ID. |
+| `find_available_parking(latitude, longitude, min_free_spaces=1, radius_meters=5000, limit=5)` | Rank fresh, usable availability by straight-line distance, excluding closed facilities. |
+| `get_parking_summary()` | Summarize status, freshness, count quality, eligible free spaces, and weighted occupancy. |
+
+Responses include the source URL, original publication timestamp, UTC retrieval
+and evaluation times, and whether the snapshot was cached. Successful snapshots
+are cached for 30 seconds; freshness is reevaluated on each call. Observations
+older than five minutes, or with missing, invalid, or future publication times,
+are never ranked as current availability. Unknown opening status is explicitly
+flagged and is not confirmation that a facility is open.
+
+Missing counts remain null. Occupancy is calculated only from valid free and
+total counts; the summary reports the subset used for weighted occupancy.
+Distances are straight-line metres, not driving distances. Free spaces are
+observations, not reservations or guarantees of availability on arrival.
+
+The client fetches a complete snapshot in stable ID order, with bounded
+pagination, HTTPS verification, and no redirects or caller-supplied URLs.
+Malformed responses and source failures fail explicitly instead of looking like
+empty results or falling back to an expired cache. Settings live in
+`servers/basel-parking/config/tools_config.yaml` and take effect after a restart.
+
 ## Add Another Server
 
 1. Create `servers/my-server/` with `config/`, `tools/`, and `tools/__init__.py`,
-   following either bundled server. `tools_config.yaml` enables modules;
+  following a bundled server. `tools_config.yaml` enables modules;
    `server_instructions.md` contains optional plain-text or Markdown guidance.
 2. Add a service under `services:` in `docker-compose.yaml`, reusing the anchors:
 
@@ -174,22 +221,37 @@ the image. Reconnect clients after restarting. Recreate a container with
 installed tool dependencies. Changes to the shared runtime or base requirements
 require `docker compose up --build -d` for the affected services.
 
-## Server Instructions
+## Server Context And Prompts
 
 Each server reads its own `config/server_instructions.md` at startup and sends
-the text in the MCP initialization response over both HTTP and stdio. Missing or
-whitespace-only files disable instructions; other file errors stop startup.
+the text in the MCP initialization response over both HTTP and stdio. The same
+text is exposed as a no-argument MCP prompt named `general_context`, so each
+server has its own context without duplicating it in Python tool modules.
 
-These are server instructions, not selectable prompt templates. Clients decide
-whether to include them in model context. They cannot enforce behavior or
-override client policies; enforce mandatory restrictions in tool code.
+Clients discover the prompt through `prompts/list` and retrieve it through
+`prompts/get` with `{"name": "general_context"}`. With an initialized Python SDK
+client session:
+
+```python
+context = await session.get_prompt("general_context")
+```
+
+The returned `context.messages` contain the server's guidance. Initialization
+instructions arrive when a client connects; prompts must be requested by the
+client or selected by the user. Clients decide whether to include either in
+model context. Neither can enforce behavior or override client policies;
+enforce mandatory restrictions in tool code.
+
+Missing or whitespace-only files disable both instructions and the automatic
+`general_context` prompt; other file errors stop startup. Edit the context file
+and restart the server to apply changes, then reconnect clients.
 
 ## Local Development And VS Code
 
 ```bash
 python3.12 -m venv .venv
 . .venv/bin/activate
-python -m pip install -r requirements.txt -r servers/zurich-hackathon/tools/requirements/hackathon.txt
+python -m pip install -r requirements.txt -r servers/zurich-hackathon/tools/requirements/hackathon.txt -r servers/basel-parking/tools/requirements/basel_parking.txt
 python -m unittest discover -s tests -v
 MCP_HOST=127.0.0.1 MCP_PORT=8557 python main.py --server-dir servers/zurich-hackathon
 ```
@@ -209,9 +271,10 @@ the dependency install directory, which defaults locally to `tool_packages/`
 inside the selected server folder. Docker sets it outside the read-only mount.
 
 Select `.venv` in VS Code. The two debug configurations launch the hackathon on
-port 8557 and the text demo on port 8558. `.vscode/mcp.json` also contains two
-independent Docker/stdio MCP connections. Run `docker compose build` first, then
-start the desired MCP connection in VS Code; no HTTP container is needed.
+port 8557 and the text demo on port 8558. `.vscode/mcp.json` also contains three
+independent Docker/stdio MCP connections, including Basel parking. Run
+`docker compose build` first, then start the desired MCP connection in VS Code;
+no HTTP container is needed.
 
 ## Dependency And Security Model
 
