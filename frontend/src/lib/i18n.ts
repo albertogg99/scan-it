@@ -1,5 +1,5 @@
 const en = {
-  explore: 'Choose a demo', transit: 'Zurich Transit (demo)', museum: 'Museum Guide (demo)', open: 'Open',
+  explore: 'Explore with Apertus', transit: 'Zurich Transit (demo)', museum: 'Museum Guide (demo)', open: 'Open',
   chat: 'Local Chat', configure: 'Configure Other', back: 'Back', unavailable: 'Service unavailable', notFound: 'Service not found', retry: 'Retry',
   disconnected: 'This service is not reachable right now.', choose: 'Choose how to connect', publicMissing: 'No public endpoint is configured for this service.',
   publicHttps: 'Cloud clients need a public HTTPS endpoint reachable from their servers. A LAN, localhost, or Docker address will not work.',
@@ -31,4 +31,7 @@ const it: Partial<Record<Key, string>> = {
 export type Locale = 'en' | 'de' | 'fr' | 'it';
 export const locales: Locale[] = ['en', 'de', 'fr', 'it'];
 export function initialLocale(): Locale { const stored = localStorage.getItem('sd.locale') || navigator.language.slice(0, 2); return locales.includes(stored as Locale) ? stored as Locale : 'en'; }
-export function translate(locale: Locale, key: Key) { return ({ en, de, fr, it }[locale][key] || en[key]); }
+export function translate(locale: Locale, key: Key) {
+  if (key === 'explore') return { en: 'Explore with Apertus', de: 'Mit Apertus entdecken', fr: 'Explorer avec Apertus', it: 'Esplora con Apertus' }[locale];
+  return ({ en, de, fr, it }[locale][key] || en[key]);
+}

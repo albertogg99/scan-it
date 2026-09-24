@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { SseParser } from './sse';
 import { initialLive, reduceLive } from './reducer';
+import { groupParts } from '../components/message-content';
 
 describe('resumable event stream', () => {
+  it('joins saved token fragments without merging across tool activity or mutating history', () => {
+    const parts = [{ type: 'text' as const, text: '**Hel' }, { type: 'text' as const, text: 'lo** world' },
+      { type: 'tool_call' as const, tool_call_id: 'tool' }, { type: 'text' as const, text: 'Done' },
+      { type: 'reasoning' as const, text: 'Think' }, { type: 'reasoning' as const, text: 'ing' }];
+    expect(groupParts(parts)).toEqual([{ type: 'text', text: '**Hello** world' },
+      { type: 'tool_call', tool_call_id: 'tool' }, { type: 'text', text: 'Done' }, { type: 'reasoning', text: 'Thinking' }]);
+    expect(parts[0].text).toBe('**Hel');
+  });
   it('parses split unicode, CRLF, comments and multiple frames', () => {
     const parser = new SseParser();
     const bytes = new TextEncoder().encode('id: 1\r\nevent: answer.delta\r\ndata: {"seq":1,"type":"answer.delta","run_id":"r","text":"Zürich"}\r\n\r\n: keepalive\r\n\r\nid: 2\nevent: run.completed\ndata: {"seq":2,"type":"run.completed","run_id":"r"}\n\n');

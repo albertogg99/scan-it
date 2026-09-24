@@ -6,10 +6,22 @@ import pytest
 from sqlalchemy import select
 
 from app.agent import manager
-from app.llm.adapter import Normalizer
+from app.llm.adapter import Normalizer, provider_messages
 from app.persistence.models import Conversation, MCPServer, Message, Run, ToolCall, new_id
 from app.settings import Settings, get_settings
 from app.main import app
+
+
+def test_saved_parts_join_tokens_and_keep_tool_boundaries():
+    parts = []
+    manager.append_part(parts, "text", "Hello")
+    manager.append_part(parts, "text", " world")
+    parts.append({"type": "tool_call", "tool_call_id": "lookup"})
+    manager.append_part(parts, "text", "Result")
+    manager.append_part(parts, "reasoning", "Think")
+    manager.append_part(parts, "reasoning", "ing")
+    assert parts == [{"type": "text", "text": "Hello world"}, {"type": "tool_call", "tool_call_id": "lookup"},
+                     {"type": "text", "text": "Result"}, {"type": "reasoning", "text": "Thinking"}]
 
 
 def test_markers_structured_and_same_index_fragments():
@@ -31,6 +43,25 @@ def test_markers_structured_and_same_index_fragments():
     ]
     assert Normalizer().feed({"reasoning_content": "private", "content": "public"}) == [
         ("reasoning", "private"), ("text", "public")]
+
+
+def test_swisscom_tool_history_preserves_audit_and_labels_completed_results():
+    settings = Settings(_env_file=None, llm_base_url="https://api.swisscom.com/products/swiss-ai-weeks/apertus-1.5-70b/v1", llm_model="swiss-ai/Apertus-v1.5-70B")
+    messages = [{"role": "assistant", "content": "", "tool_calls": [
+        {"id": "empty", "type": "function", "function": {"name": "list_exhibits", "arguments": "{}"}}]},
+        {"role": "tool", "tool_call_id": "empty", "content": "The user denied this tool call."},
+        {"role": "assistant", "content": "", "tool_calls": [
+            {"id": "lookup", "type": "function", "function": {"name": "lookup", "arguments": '{"term":"clock"}'}}]},
+        {"role": "tool", "tool_call_id": "lookup", "content": "Clock details"}]
+    snapshot = json.dumps(messages)
+    prepared = provider_messages(settings, messages)
+    assert "tool_calls" not in prepared[0]
+    assert prepared[1]["role"] == "user"
+    assert "untrusted data" in prepared[1]["content"]
+    assert "The user denied this tool call." in prepared[1]["content"]
+    assert prepared[3] == {"role": "tool", "tool_call_id": "lookup", "name": "lookup", "content": "Clock details"}
+    assert json.dumps(messages) == snapshot
+    assert provider_messages(Settings(_env_file=None), messages) is messages
 
 
 def test_real_swisscom_tool_probe_assembly():
@@ -213,6 +244,8 @@ async def test_supported_image_data_urls_in_history(running_api, monkeypatch):
     await manager.TASKS[sent.json()["run_id"]]
     assert seen[0][-1]["content"][1]["image_url"]["url"].startswith("data:image/png;base64,")
     assert seen[0][0]["role"] == "system"
+    assert seen[0][0]["content"] == manager.SYSTEM_PROMPT
+    assert "You are Apertus" in seen[0][0]["content"]
     assert seen[0][1]["role"] == "user"
     assert (await client.get("/api/conversations/conv-1")).json()["active_run_id"] is None
     second = await client.post("/api/conversations/conv-1/messages", json={"text": "Follow up"})

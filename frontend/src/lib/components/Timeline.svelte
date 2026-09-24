@@ -2,9 +2,11 @@
   import type { Message, ToolCall } from '$lib/api/types';
   import { decide } from '$lib/api/client';
   import ImageAttachment from './ImageAttachment.svelte';
+  import Markdown from './Markdown.svelte';
+  import { groupParts } from './message-content';
   import { ui } from '$lib/ui';
   const { t } = ui();
-  let { messages, unavailable, onChange }: { messages: Message[]; unavailable: boolean; onChange: () => void } = $props();
+  let { messages, onChange }: { messages: Message[]; onChange: () => void } = $props();
   let deciding = $state<string | null>(null);
   let decisionError = $state('');
   async function decision(call: ToolCall, approved: boolean) {
@@ -18,19 +20,20 @@
   {#each messages as message (message.id)}
     <article class:user-message={message.role === 'user'} class="message">
       <div class="message-meta">{message.role === 'user' ? t('message') : message.status === 'streaming' ? t('running') : message.status === 'failed' ? t('failed') : message.status === 'cancelled' ? t('cancelled') : ''}</div>
-      {#if message.parts?.length}
-        {#each message.parts as part}
-          {#if part.type === 'text'}<p class="message-text">{part.text}</p>
-          {:else if part.type === 'reasoning'}<details class="reasoning"><summary>{t('reasoning')}</summary><p>{part.text}</p></details>
+      {#if message.role === 'user'}
+        <p class="message-text">{message.content}</p>
+      {:else if message.parts?.length}
+        {#each groupParts(message.parts) as part}
+          {#if part.type === 'text'}<Markdown text={part.text} />
+          {:else if part.type === 'reasoning'}<details class="reasoning"><summary>{t('reasoning')}</summary><Markdown text={part.text} /></details>
           {:else}{@const call = message.tool_calls.find(item => item.id === part.tool_call_id)}{#if call}{@render tool(call)}{/if}{/if}
         {/each}
       {:else}
-        {#if message.content}<p class="message-text">{message.content}</p>{/if}
-        {#if message.reasoning}<details class="reasoning"><summary>{t('reasoning')}</summary><p>{message.reasoning}</p></details>{/if}
+        {#if message.content}<Markdown text={message.content} />{/if}
+        {#if message.reasoning}<details class="reasoning"><summary>{t('reasoning')}</summary><Markdown text={message.reasoning} /></details>{/if}
         {#each message.tool_calls as call}{@render tool(call)}{/each}
       {/if}
       {#each message.attachments as attachment}<ImageAttachment id={attachment.id} mime={attachment.mime} />{/each}
-      {#if (unavailable || message.status === 'completed') && message.role === 'assistant' && !message.reasoning && message.status !== 'streaming'}<p class="muted">{t('reasoningUnavailable')}</p>{/if}
       {#if message.error}<p role="alert" class="notice">{message.error.message}</p>{/if}
     </article>
   {/each}
@@ -44,3 +47,21 @@
     {#if decisionError}<p role="alert">{decisionError}</p>{/if}
   </section>
 {/snippet}
+
+<style>
+  .message { min-width: 0; }
+  .message.user-message {
+    width: fit-content;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: 0;
+    padding: 14px 18px;
+    border: 1px solid rgb(127 127 127 / 22%);
+    border-radius: 8px;
+    background: rgb(127 127 127 / 8%);
+    overflow-wrap: anywhere;
+  }
+  .user-message .message-meta { display: none; }
+  .user-message .message-text { margin: 0; }
+  @media (max-width: 600px) { .message.user-message { max-width: 92%; } }
+</style>
