@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import select
 
 from app.agent import manager
-from app.llm.adapter import Normalizer, provider_messages
+from app.llm.adapter import OMITTED_REPLY, Normalizer, clean_history, provider_messages
 from app.persistence.models import Conversation, MCPServer, Message, Run, ToolCall, new_id
 from app.settings import Settings, get_settings
 from app.main import app
@@ -45,23 +45,58 @@ def test_markers_structured_and_same_index_fragments():
         ("reasoning", "private"), ("text", "public")]
 
 
-def test_swisscom_tool_history_preserves_audit_and_labels_completed_results():
+def test_swisscom_tool_history_keeps_empty_calls_structured_and_labels_malformed_results():
     settings = Settings(_env_file=None, llm_base_url="https://api.swisscom.com/products/swiss-ai-weeks/apertus-1.5-70b/v1", llm_model="swiss-ai/Apertus-v1.5-70B")
     messages = [{"role": "assistant", "content": "", "tool_calls": [
         {"id": "empty", "type": "function", "function": {"name": "list_exhibits", "arguments": "{}"}}]},
-        {"role": "tool", "tool_call_id": "empty", "content": "The user denied this tool call."},
+        {"role": "tool", "tool_call_id": "empty", "content": "Exhibit list"},
+        {"role": "assistant", "content": "", "tool_calls": [
+            {"id": "broken", "type": "function", "function": {"name": "lookup", "arguments": "{oops"}}]},
+        {"role": "tool", "tool_call_id": "broken", "content": "Tool call rejected: Invalid tool arguments."},
         {"role": "assistant", "content": "", "tool_calls": [
             {"id": "lookup", "type": "function", "function": {"name": "lookup", "arguments": '{"term":"clock"}'}}]},
         {"role": "tool", "tool_call_id": "lookup", "content": "Clock details"}]
     snapshot = json.dumps(messages)
     prepared = provider_messages(settings, messages)
-    assert "tool_calls" not in prepared[0]
-    assert prepared[1]["role"] == "user"
-    assert "untrusted data" in prepared[1]["content"]
-    assert "The user denied this tool call." in prepared[1]["content"]
-    assert prepared[3] == {"role": "tool", "tool_call_id": "lookup", "name": "lookup", "content": "Clock details"}
+    assert json.loads(prepared[0]["tool_calls"][0]["function"]["arguments"]) == {"_no_arguments": True}
+    assert prepared[1] == {"role": "tool", "tool_call_id": "empty", "name": "list_exhibits", "content": "Exhibit list"}
+    assert "tool_calls" not in prepared[2]
+    assert prepared[3]["role"] == "user"
+    assert "untrusted data" in prepared[3]["content"]
+    assert "Invalid tool arguments." in prepared[3]["content"]
+    assert prepared[5] == {"role": "tool", "tool_call_id": "lookup", "name": "lookup", "content": "Clock details"}
     assert json.dumps(messages) == snapshot
     assert provider_messages(Settings(_env_file=None), messages) is messages
+
+
+def test_echoed_empty_arguments_placeholder_is_dropped():
+    normalizer = Normalizer()
+    normalizer.feed({"tool_calls": [
+        {"index": 0, "id": "a", "function": {"name": "summary", "arguments": '{"_no_arguments": true}'}},
+        {"index": 1, "id": "b", "function": {"name": "lookup", "arguments": '{"_no_arguments": true, "term": "x"}'}},
+        {"index": 2, "id": "c", "function": {"name": "lookup", "arguments": '{"term": "y"}'}},
+    ]})
+    normalizer.finish()
+    assert [json.loads(call["arguments"]) for call in normalizer.calls.values()] == [{}, {"term": "x"}, {"term": "y"}]
+    assert normalizer.calls[2]["arguments"] == '{"term": "y"}'
+
+
+def test_replay_scrubs_text_only_tool_imitations():
+    call = [{"id": "c", "type": "function", "function": {"name": "summary", "arguments": "{}"}}]
+    messages = [
+        {"role": "user", "content": "status?"},
+        {"role": "assistant", "content": "Fetching.\n\n```text\n🔎 Querying data\n```\n\n[Tool response: summary]", "tool_calls": call},
+        {"role": "tool", "tool_call_id": "c", "content": "16 open"},
+        {"role": "assistant", "content": "All 16 are open. 🔎 Tip: ask for one garage."},
+        {"role": "user", "content": "list them"},
+        {"role": "assistant", "content": "[Tool call: list]\n```json\n[{\"id\": \"fake\"}]\n```"},
+    ]
+    snapshot = json.dumps(messages)
+    cleaned = clean_history(messages)
+    assert cleaned[1] == {**messages[1], "content": "Fetching."}
+    assert cleaned[3] is messages[3]
+    assert cleaned[5] == {"role": "assistant", "content": OMITTED_REPLY}
+    assert json.dumps(messages) == snapshot
 
 
 def test_real_swisscom_tool_probe_assembly():
@@ -162,6 +197,35 @@ async def test_approval_denial_reconnect_and_replay(running_api, monkeypatch, ap
             {"role": "tool", "tool_call_id": "provider-1", "content": "Real result" if approved else "The user denied this tool call."},
             {"role": "assistant", "content": "Done"},
         ]
+
+
+@pytest.mark.asyncio
+async def test_live_auto_policy_skips_approval_for_existing_conversation(running_api, monkeypatch):
+    client, factory, user = running_api
+    async with factory() as session:
+        server = await session.get(MCPServer, "test-mcp")
+        server.approval_policy = "auto"
+        await session.commit()
+
+    async def completion(settings, messages, tools):
+        if messages[-1]["role"] == "user":
+            yield {"tool_calls": [{"index": 0, "id": "lookup-1", "function": {
+                "name": "lookup", "arguments": '{"term":"schedule"}'}}]}, "tool_calls"
+        else:
+            yield {"content": "Done"}, "stop"
+
+    async def tool(server, settings, name, arguments):
+        return type("Result", (), {"is_error": False, "content": [type("Text", (), {"type": "text", "text": "Schedule"})()]})()
+
+    monkeypatch.setattr(manager, "stream_completion", completion)
+    monkeypatch.setattr(manager, "call_tool", tool)
+    sent = await client.post("/api/conversations/conv-1/messages", json={"text": "Schedule?"})
+    assert sent.status_code == 202
+    await manager.TASKS[sent.json()["run_id"]]
+    async with factory() as session:
+        call = await session.scalar(select(ToolCall).where(ToolCall.provider_call_id == "lookup-1"))
+        assert call.status == "succeeded"
+        assert call.requires_approval is False
 
 
 @pytest.mark.asyncio

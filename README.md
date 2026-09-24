@@ -44,7 +44,7 @@ To register the bundled containers:
 | `zurich-transit` | `http://zurich-transit:8000/mcp` | None |
 | `museum-guide` | `http://museum-guide:8000/mcp` | Bearer, environment variable `MUSEUM_GUIDE_TOKEN` |
 
-For native processes, use `http://localhost:8101/mcp` and `http://localhost:8102/mcp`. Enter a public endpoint separately when it is safe to disclose and reachable by external clients. Registry changes take effect without rebuilding containers. Registering an MCP does not create or deploy its server container. For a new hostname, add it to `MCP_ALLOWED_HOSTS` in `.env` and recreate the backend first. Credential fields store environment variable names only; any new secret must be passed into the backend container environment. Chat snapshots server initialization instructions and tools when a conversation is created; existing conversations retain their snapshots.
+For native processes, use `http://localhost:8101/mcp` and `http://localhost:8102/mcp`. Enter a public endpoint separately when it is safe to disclose and reachable by external clients. Registry changes take effect without rebuilding containers. Registering an MCP does not create or deploy its server container. Backend endpoints may use any HTTP(S) host reachable from the backend; only grant registry administration to trusted users, since those endpoints can target internal services. Credential fields store environment variable names only; any new secret must be passed into the backend container environment. Chat snapshots server initialization instructions and tools when a conversation is created; existing conversations retain their snapshots.
 
 ## Windows native (no Docker)
 
@@ -63,7 +63,6 @@ $env:DATABASE_URL = 'postgresql+asyncpg://postgres:<URL-SAFE-DB-PASSWORD>@localh
 $env:OIDC_ISSUER = 'http://localhost:8080/realms/swiss-discover'
 $env:OIDC_JWKS_URL = 'http://localhost:8080/realms/swiss-discover/protocol/openid-connect/certs'
 $env:CORS_ORIGINS = 'http://localhost:3000'
-$env:MCP_ALLOWED_HOSTS = 'localhost,127.0.0.1'
 $env:MUSEUM_GUIDE_TOKEN = '<YOUR-MUSEUM-TOKEN>'
 $env:LLM_BASE_URL = 'https://api.swisscom.com/products/swiss-ai-weeks/apertus-1.5-70b/v1'
 $env:LLM_MODEL = 'swiss-ai/Apertus-v1.5-70B'

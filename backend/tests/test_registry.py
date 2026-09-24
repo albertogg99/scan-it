@@ -5,12 +5,14 @@ from app.registry.service import credential_headers, validate_backend_url, valid
 from app.settings import Settings
 
 
-def test_exact_host_and_secret_reference(monkeypatch):
-    settings = Settings(_env_file=None, mcp_allowed_hosts="museum-guide")
-    for url in ("http://museum-guide.evil/mcp", "http://museum-guide@evil/mcp", "file://museum-guide/mcp", "http://museum-guide/mcp#fragment", "http://museum-guide/mcp?token=secret"):
+def test_url_validation_and_secret_reference(monkeypatch):
+    settings = Settings(_env_file=None)
+    for url in ("http://museum-guide@evil/mcp", "file://museum-guide/mcp", "http://museum-guide/mcp#fragment", "http://museum-guide/mcp?token=secret"):
         with pytest.raises(ValueError):
             validate_backend_url(url, settings)
     validate_backend_url("http://museum-guide:8000/mcp", settings)
+    validate_backend_url("http://10.10.52.203:8655/mcp", settings)
+    validate_backend_url("https://museum-guide.evil/mcp", settings)
     entry = {
         "id": "museum-guide", "backend_url": "http://museum-guide:8000/mcp",
         "approval_policy": "ask_destructive", "auth": {"type": "bearer", "credential_env": "MUSEUM_GUIDE_TOKEN"},
@@ -43,10 +45,14 @@ async def test_admin_registry_and_icons(api):
     assert (await client.get("/api/admin/mcps")).status_code == 401
     app.dependency_overrides[current_admin] = lambda: "admin"
     entry = {"id": "new-mcp", "title": "New MCP", "backend_url": "http://museum-guide:8000/mcp"}
-    assert (await client.post("/api/admin/mcps", json={**entry, "backend_url": "http://evil/mcp"})).status_code == 422
+    assert (await client.post("/api/admin/mcps", json={**entry, "backend_url": "file://evil/mcp"})).status_code == 422
+    assert (await client.post("/api/admin/mcps", json={**entry, "backend_url": "http://10.10.52.203:8655/mcp"})).status_code == 201
+    assert (await client.delete("/api/admin/mcps/new-mcp")).status_code == 204
     assert (await client.post("/api/admin/mcps", json=entry)).status_code == 201
     assert (await client.post("/api/admin/mcps", json=entry)).status_code == 409
-    assert len((await client.get("/api/admin/mcps")).json()["servers"]) == 1
+    registry = (await client.get("/api/admin/mcps")).json()
+    assert len(registry["servers"]) == 1
+    assert "allowed_hosts" not in registry
     icon_path = "/api/admin/mcps/new-mcp/icon"
     svg = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="#123456"/></svg>'
     assert (await client.post(icon_path, files={"file": ("icon.svg", svg, "image/svg+xml")})).status_code == 200

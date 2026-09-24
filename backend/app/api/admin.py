@@ -64,9 +64,9 @@ def assign_entry(server: MCPServer, entry: RegistryEntry, settings: Settings) ->
 
 
 @router.get("/mcps")
-async def list_entries(session: AsyncSession = Depends(get_session), settings: Settings = Depends(get_settings)):
+async def list_entries(session: AsyncSession = Depends(get_session)):
     servers = await session.scalars(select(MCPServer).order_by(MCPServer.title))
-    return {"servers": [admin_entry(server) for server in servers], "allowed_hosts": sorted(settings.allowed_hosts)}
+    return {"servers": [admin_entry(server) for server in servers]}
 
 
 @router.post("/mcps", status_code=201)

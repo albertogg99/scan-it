@@ -20,7 +20,6 @@ class Settings(BaseSettings):
     oidc_jwks_url: str = "http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs"
     oidc_audience: str = "swiss-discover-api"
     cors_origins: str = "http://localhost:3000"
-    mcp_allowed_hosts: str = "zurich-transit,museum-guide,localhost,127.0.0.1"
     max_tool_rounds: int = 6
     tool_timeout_s: int = 20
     mcp_connect_timeout_s: int = 8
@@ -37,9 +36,6 @@ class Settings(BaseSettings):
     def api_key(self) -> str | None:
         return self.llm_api_key or self.swisscom_api_key or self.public_ai_api_key
 
-    @property
-    def allowed_hosts(self) -> frozenset[str]:
-        return frozenset(host.strip().lower() for host in self.mcp_allowed_hosts.split(",") if host.strip())
 
 
 @lru_cache

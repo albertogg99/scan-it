@@ -20,10 +20,9 @@ def error(status: int, code: str, message: str) -> HTTPException:
 def validate_backend_url(url: str, settings: Settings) -> None:
     parsed = urlsplit(url)
     if (parsed.scheme not in ("http", "https") or not parsed.hostname
-            or parsed.hostname.lower() not in settings.allowed_hosts
             or parsed.username is not None or parsed.password is not None
             or parsed.fragment or parsed.query or any(char.isspace() for char in url)):
-        raise ValueError("MCP endpoint must use an exactly allowlisted HTTP(S) hostname")
+        raise ValueError("MCP endpoint must use an HTTP(S) URL without credentials, query or fragment")
     try:
         if parsed.port is not None and parsed.port < 1:
             raise ValueError("Invalid port")

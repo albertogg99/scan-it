@@ -18,7 +18,7 @@ export async function request<T>(path: string, init: RequestInit = {}, auth = tr
   return response.status === 204 ? undefined as T : response.json() as Promise<T>;
 }
 export const publicMcps = () => request<PublicMcp[]>('/api/public/mcps', {}, false);
-export const adminMcps = () => request<{ servers: AdminMcp[]; allowed_hosts: string[] }>('/api/admin/mcps');
+export const adminMcps = () => request<{ servers: AdminMcp[] }>('/api/admin/mcps');
 export const saveMcp = (entry: RegistryEntry, existing: boolean) => request<AdminMcp>(`/api/admin/mcps${existing ? `/${encodeURIComponent(entry.id)}` : ''}`, { method: 'POST', body: JSON.stringify(entry) });
 export const deleteMcp = (id: string) => request<void>(`/api/admin/mcps/${encodeURIComponent(id)}`, { method: 'DELETE' });
 export const uploadMcpIcon = (id: string, file: File) => { const body = new FormData(); body.append('file', file); return request<AdminMcp>(`/api/admin/mcps/${encodeURIComponent(id)}/icon`, { method: 'POST', body }); };

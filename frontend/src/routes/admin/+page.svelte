@@ -9,7 +9,6 @@
   const blank = (): RegistryEntry => ({ id: '', title: '', description: '', backend_url: '', public_url: '', enabled: true, approval_policy: 'ask_destructive', auth: { type: 'none', header_name: '', credential_env: '' } });
   let pageStatus = $state<'loading' | 'ready' | 'signed-out' | 'forbidden' | 'error'>('loading');
   let servers = $state<AdminMcp[]>([]);
-  let allowedHosts = $state<string[]>([]);
   let form = $state<RegistryEntry>(blank());
   let existing = $state(false);
   let iconUrl = $state<string | null>(null);
@@ -28,7 +27,6 @@
   async function refresh() {
     const result = await adminMcps();
     servers = result.servers;
-    allowedHosts = result.allowed_hosts;
   }
   async function load() {
     pageStatus = 'loading'; error = '';
@@ -116,8 +114,7 @@
             <label>Title<input bind:value={form.title} required maxlength="200" /></label>
           </div>
           <label>Description<textarea bind:value={form.description} rows="3" maxlength="4000"></textarea></label>
-          <label>Backend endpoint<input bind:value={form.backend_url} type="url" required maxlength="2048" placeholder="http://museum-guide:8000/mcp" aria-describedby="allowed-hosts" /></label>
-          <p id="allowed-hosts" class="field-note">Allowed hosts: {allowedHosts.join(', ')}</p>
+          <label>Backend endpoint<input bind:value={form.backend_url} type="url" required maxlength="2048" placeholder="http://museum-guide:8000/mcp" /></label>
           <label>Public endpoint <span class="muted">(optional)</span><input bind:value={form.public_url} type="url" maxlength="2048" placeholder="https://example.com/mcp" /></label>
           <div class="field-pair">
             <label>Authentication<select bind:value={form.auth.type}><option value="none">None</option><option value="bearer">Bearer token</option><option value="header">Custom header</option></select></label>
@@ -170,7 +167,6 @@
   input:disabled { opacity: .6; }
   textarea { resize: vertical; }
   .field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-  .field-note { margin: -9px 0 20px; color: #77736c; font-size: .75rem; overflow-wrap: anywhere; }
   .icon-field { display: flex; align-items: center; gap: 14px; margin: 4px 0 20px; }
   .icon-field label { flex: 1; margin: 0; }
   .icon-placeholder { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; border: 1px solid var(--line); }
