@@ -18,7 +18,7 @@ This document is the implementation brief, not permission to start implementatio
 - Authentication: Keycloak in Docker Compose, OIDC authorization-code + PKCE in the SvelteKit client, backend validates access tokens against Keycloak issuer/JWKS and derives user id from `sub`. Enable self-registration; use a custom native Keycloak theme (FreeMarker/CSS, no React build). Keep secrets and admin credentials in environment variables, never frontend code. Anonymous users can access the entry and Configure Other pages, not conversation APIs.
 - Data: Postgres Docker container with persistent volume and migrations. Store registry metadata, user-scoped conversations/messages, tool call and approval states, and bounded uploaded image bytes (`bytea`) with MIME type/size limits. Do not store raw model API keys in browser storage. Define deletion behavior for messages and attachments.
 - MCP configuration: admin-managed Postgres registry populated from a seed file; each record has a stable opaque id, public title/description, backend Streamable HTTP endpoint, optional public endpoint for Configure Other, server-side static header/bearer credential reference, enable flag, and tool-approval policy. Only approved registry entries can be contacted; protect against SSRF through host allowlists or explicit admin trust and prevent untrusted users from editing endpoints. No user-supplied raw MCP URL. Implement static header/bearer auth in the MVP; design a per-user OAuth credential interface for later but do not claim OAuth support yet.
-- Deployment: local laptop Docker Compose demo with frontend, FastAPI, Keycloak, Postgres, and two independent test MCP containers. Document `.env.example`, health checks, seed/migration setup, and start/stop commands. A QR opened on another device must use a LAN-reachable hostname/IP, not `localhost`; verify Keycloak redirect URLs, allowed origins, and transport reachability accordingly. Public HTTPS deployment and third-party cloud-client connectivity are follow-up concerns, not MVP guarantees.
+- Deployment: local laptop Docker Compose demo with frontend, FastAPI, Keycloak, and Postgres. Document `.env.example`, health checks, seed/migration setup, and start/stop commands. A QR opened on another device must use a LAN-reachable hostname/IP, not `localhost`; verify Keycloak redirect URLs, allowed origins, and transport reachability accordingly. Public HTTPS deployment and third-party cloud-client connectivity are follow-up concerns, not MVP guarantees.
 
 ## Model and streaming contract
 
@@ -33,12 +33,9 @@ This document is the implementation brief, not permission to start implementatio
 - Approval is configured per MCP: `auto`, `ask_always`, or `ask_destructive`. For `ask_destructive`, use MCP tool annotations such as `destructiveHint` when supplied; if a tool lacks reliable annotations, default to asking. Never execute a pending call until a decision is recorded, and do not rerun it on stream reconnect. Show arguments before approval and results/errors afterward; ensure the model receives only completed tool results or a denial result. Limit tool output length and sanitize rendering of MCP content.
 - Model and MCP connections run on the backend, never directly from the browser. Scope every conversation, uploaded image, pending approval, and stream to the authenticated user. Keep credentials out of logs, streamed events, and Configure Other instructions. Surface network failures and provider limits without discarding prior chat history.
 
-## Two demo MCP servers
+## Tests
 
-1. `zurich-transit`: independent FastMCP Streamable HTTP server, named tools for a Zurich stop and real-time departures via `transport.opendata.ch`. Time out cleanly and label stale/unavailable upstream data; keep example stops configurable.
-2. `museum-guide`: independent FastMCP Streamable HTTP server with a small static exhibit catalog and guide tools. Use original sample content rather than copied museum descriptions.
-
-Both expose a `general_context` prompt as defined in [MCP_CONVENTIONS.md](MCP_CONVENTIONS.md), have unique registry ids and user-facing descriptions, and demonstrate that the same chat shell works with both. Include unit tests for registry resolution, missing prompts, approval/denial, chunked tool-call parsing and reasoning, and conversation isolation, plus one end-to-end path from id -> login -> prompt -> tool -> saved history.
+Include unit tests for registry resolution, missing prompts, approval/denial, chunked tool-call parsing and reasoning, and conversation isolation, plus one end-to-end path from id -> login -> prompt -> tool -> saved history.
 
 ## Interface direction
 

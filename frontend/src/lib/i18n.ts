@@ -1,6 +1,6 @@
 const en = {
   search: 'Search applications', noResults: 'No matching applications', clearSearch: 'Clear search',
-  explore: 'Explore with Apertus', transit: 'Zurich Transit (demo)', museum: 'Museum Guide (demo)', open: 'Open',
+  explore: 'Explore with Apertus', open: 'Open',
   chat: 'Local Chat', configure: 'Configure other chatbots', back: 'Back', unavailable: 'Service unavailable', notFound: 'Service not found', retry: 'Retry',
   collapseSidebar: 'Collapse sidebar', expandSidebar: 'Expand sidebar',
   disconnected: 'This service is not reachable right now.', choose: 'Choose how to connect', publicMissing: 'No public endpoint is configured for this service.',

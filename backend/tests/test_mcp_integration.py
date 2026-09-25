@@ -1,14 +1,13 @@
 import asyncio
-import importlib.util
 import json
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
-from fastmcp import Client
+from fastmcp import Client, FastMCP
+from mcp.types import ToolAnnotations
 from sqlalchemy import delete, select
 
 from app.agent import manager
@@ -19,9 +18,20 @@ from app.persistence.models import Conversation, MCPServer, Run, RunEvent, ToolC
 from app.settings import Settings, get_settings
 
 
+def build_server() -> FastMCP:
+    server = FastMCP("Example MCP", instructions="The item catalog is static sample content.")
+
+    @server.tool(annotations=ToolAnnotations(readOnlyHint=True, destructiveHint=False, openWorldHint=False))
+    def item_details(item_id: str) -> dict:
+        """Retrieve one item from the static catalog."""
+        return {"status": "ok", "id": item_id, "description": "A sample item used for integration tests."}
+
+    return server
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("approved", [True, False])
-async def test_signed_identity_museum_conversation_and_bounded_replay(api, monkeypatch, approved):
+async def test_signed_identity_conversation_and_bounded_replay(api, monkeypatch, approved):
     client, factory, _ = api
     app.dependency_overrides.pop(authentication.current_user)
     settings = Settings(_env_file=None, llm_api_key="local-test-only", approval_timeout_s=4)
@@ -37,18 +47,15 @@ async def test_signed_identity_museum_conversation_and_bounded_replay(api, monke
                            private_key, algorithm="RS256", headers={"kid": "local-key"})
         return {"Authorization": f"Bearer {token}"}
 
-    museum_file = Path(__file__).resolve().parents[2] / "mcp-servers" / "museum-guide" / "server.py"
-    spec = importlib.util.spec_from_file_location("museum_integration_server", museum_file)
-    museum = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(museum)
+    example = build_server()
 
     @asynccontextmanager
-    async def in_process_museum(server, settings):
-        assert server.backend_url == "http://museum-guide:8000/mcp"
-        async with Client(museum.mcp) as session:
+    async def in_process_server(server, settings):
+        assert server.backend_url == "http://example-mcp:8000/mcp"
+        async with Client(example) as session:
             yield session
 
-    monkeypatch.setattr(mcp_client, "connect", in_process_museum)
+    monkeypatch.setattr(mcp_client, "connect", in_process_server)
     executions = []
 
     async def actual_tool(server, settings, name, arguments):
@@ -61,15 +68,15 @@ async def test_signed_identity_museum_conversation_and_bounded_replay(api, monke
     async def model_stream(settings, messages, tools):
         requests.append((messages, tools))
         if len(requests) == 1:
-            yield {"tool_calls": [{"index": 0, "id": "museum-call", "function": {
-                "name": "exhibit_details", "arguments": '{"exhibit_id":"signal-room"}'}}]}, "tool_calls"
+            yield {"tool_calls": [{"index": 0, "id": "example-call", "function": {
+                "name": "item_details", "arguments": '{"item_id":"sample"}'}}]}, "tool_calls"
         else:
-            yield {"content": "Signal Room is in the North Hall."}, "stop"
+            yield {"content": "The sample item is ready."}, "stop"
 
     monkeypatch.setattr(manager, "stream_completion", model_stream)
     async with factory() as session:
-        session.add(MCPServer(id="museum-guide", title="Museum Guide", description="Demo",
-                              backend_url="http://museum-guide:8000/mcp", auth_type="none",
+        session.add(MCPServer(id="example-mcp", title="Example MCP", description="Test",
+                              backend_url="http://example-mcp:8000/mcp", auth_type="none",
                               enabled=True, approval_policy="ask_always"))
         await session.commit()
 
@@ -78,17 +85,17 @@ async def test_signed_identity_museum_conversation_and_bounded_replay(api, monke
     signed = alice["Authorization"]
     forged = {"Authorization": signed[:-8] + ("a" if signed[-8] != "a" else "b") + signed[-7:]}
     assert (await client.get("/api/conversations", headers=forged)).status_code == 401
-    assert (await client.get("/api/public/mcps/museum-guide", headers=alice)).status_code == 200
-    assert [item["id"] for item in (await client.get("/api/public/mcps")).json()] == ["museum-guide"]
-    created = await client.post("/api/conversations", json={"mcp_id": "museum-guide"}, headers=alice)
+    assert (await client.get("/api/public/mcps/example-mcp", headers=alice)).status_code == 200
+    assert [item["id"] for item in (await client.get("/api/public/mcps")).json()] == ["example-mcp"]
+    created = await client.post("/api/conversations", json={"mcp_id": "example-mcp"}, headers=alice)
     assert created.status_code == 201, created.text
     conversation = created.json()
     conversation_id = conversation["id"]
     async with factory() as session:
         assert "static sample content" in (await session.get(Conversation, conversation_id)).context_snapshot
-    assert any(tool["name"] == "exhibit_details" and tool["requires_approval"] for tool in conversation["tools"])
+    assert any(tool["name"] == "item_details" and tool["requires_approval"] for tool in conversation["tools"])
     assert (await client.get(f"/api/conversations/{conversation_id}", headers=bob)).status_code == 404
-    sent = await client.post(f"/api/conversations/{conversation_id}/messages", json={"text": "Tell me about Signal Room"}, headers=alice)
+    sent = await client.post(f"/api/conversations/{conversation_id}/messages", json={"text": "Tell me about the sample"}, headers=alice)
     assert sent.status_code == 202, sent.text
     run_id = sent.json()["run_id"]
 
@@ -99,9 +106,9 @@ async def test_signed_identity_museum_conversation_and_bounded_replay(api, monke
             if call:
                 break
             await asyncio.sleep(0.02)
-    assert call.status == "pending_approval" and call.arguments == {"exhibit_id": "signal-room"}
+    assert call.status == "pending_approval" and call.arguments == {"item_id": "sample"}
     assert "static sample content" in requests[0][0][1]["content"]
-    assert any(tool["function"]["name"] == "exhibit_details" for tool in requests[0][1])
+    assert any(tool["function"]["name"] == "item_details" for tool in requests[0][1])
     assert (await client.get(f"/api/runs/{run_id}/events", headers=bob)).status_code == 404
     assert (await client.post(f"/api/tool-calls/{call.id}/decision", json={"approved": True}, headers=bob)).status_code == 404
     decision = await client.post(f"/api/tool-calls/{call.id}/decision", json={"approved": approved}, headers=alice)
@@ -118,7 +125,7 @@ async def test_signed_identity_museum_conversation_and_bounded_replay(api, monke
     assert [event["type"] for event in events][-1] == "run.completed"
     assert any(event["type"] == "approval.pending" for event in events)
     assert sum(event["type"] == "tool.running" for event in events) == int(approved)
-    assert executions == ([("exhibit_details", {"exhibit_id": "signal-room"})] if approved else [])
+    assert executions == ([("item_details", {"item_id": "sample"})] if approved else [])
     after = events[0]["seq"]
     replay = await client.get(f"/api/runs/{run_id}/events?after={after}", headers=alice)
     assert "event: run.started" not in replay.text and "event: run.completed" in replay.text
@@ -132,12 +139,12 @@ async def test_signed_identity_museum_conversation_and_bounded_replay(api, monke
     assert len(executions) == int(approved)
     assert len(requests) == 2
     if approved:
-        assert "A wall of softly lit switches" in requests[1][0][-1]["content"]
+        assert "A sample item used for integration tests." in requests[1][0][-1]["content"]
     else:
         assert requests[1][0][-1]["content"] == "The user denied this tool call."
     detail = (await client.get(f"/api/conversations/{conversation_id}", headers=alice)).json()
     assert [message["role"] for message in detail["messages"]] == ["user", "assistant"]
-    assert detail["messages"][1]["content"] == "Signal Room is in the North Hall."
+    assert detail["messages"][1]["content"] == "The sample item is ready."
     assert detail["messages"][1]["tool_calls"][0]["status"] == ("succeeded" if approved else "denied")
     assert detail["active_run_id"] is None
     async with factory() as session:

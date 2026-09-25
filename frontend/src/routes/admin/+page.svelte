@@ -115,7 +115,7 @@
             <label>Title<input bind:value={form.title} required maxlength="200" /></label>
           </div>
           <label>Description<textarea bind:value={form.description} rows="3" maxlength="4000"></textarea></label>
-          <label>Backend endpoint<input bind:value={form.backend_url} type="url" required maxlength="2048" placeholder="http://museum-guide:8000/mcp" /></label>
+          <label>Backend endpoint<input bind:value={form.backend_url} type="url" required maxlength="2048" placeholder="http://example-mcp:8000/mcp" /></label>
           <label>Public endpoint <span class="muted">(optional)</span><input bind:value={form.public_url} type="url" maxlength="2048" placeholder="https://example.com/mcp" /></label>
           <div class="field-pair">
             <label>Authentication<select bind:value={form.auth.type}><option value="none">None</option><option value="bearer">Bearer token</option><option value="header">Custom header</option></select></label>

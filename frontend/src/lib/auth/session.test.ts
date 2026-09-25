@@ -6,7 +6,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('OIDC redirect and PKCE', () => {
   it('rejects external and protocol-relative redirects', () => {
-    expect(safeReturn('/m/museum-guide/chat?conversation=abc')).toBe('/m/museum-guide/chat?conversation=abc');
+    expect(safeReturn('/m/example-mcp/chat?conversation=abc')).toBe('/m/example-mcp/chat?conversation=abc');
     expect(safeReturn('//external.example')).toBe('/');
     expect(safeReturn('https://external.example')).toBe('/');
     expect(safeReturn('/\\external.example')).toBe('/');
@@ -30,14 +30,14 @@ describe('OIDC redirect and PKCE', () => {
       return Response.json({ access_token: 'access', refresh_token: 'refresh', id_token, expires_in: 300 });
     });
     vi.stubGlobal('fetch', fetchMock);
-    await login('/m/museum-guide/chat?conversation=abc');
+    await login('/m/example-mcp/chat?conversation=abc');
     const params = new URL(assign.mock.calls[0][0] as string).searchParams;
     nonce = params.get('nonce')!;
     await expect(finishLogin(new URLSearchParams({ state: 'forged', code: 'valid' }))).rejects.toThrow('OIDC response invalid or expired');
-    await expect(finishLogin(new URLSearchParams({ state: params.get('state')!, code: 'valid' }))).resolves.toBe('/m/museum-guide/chat?conversation=abc');
+    await expect(finishLogin(new URLSearchParams({ state: params.get('state')!, code: 'valid' }))).resolves.toBe('/m/example-mcp/chat?conversation=abc');
     expect(await accessToken()).toBe('access');
     expect(storage.get('sd.tokens')).not.toContain('verifier');
-    await login('/m/zurich-transit/chat');
+    await login('/m/other-mcp/chat');
     const next = new URL(assign.mock.calls[1][0] as string).searchParams;
     nonce = 'forged';
     await expect(finishLogin(new URLSearchParams({ state: next.get('state')!, code: 'valid' }))).rejects.toThrow('nonce');

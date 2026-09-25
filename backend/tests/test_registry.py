@@ -7,21 +7,21 @@ from app.settings import Settings
 
 def test_url_validation_and_secret_reference(monkeypatch):
     settings = Settings(_env_file=None)
-    for url in ("http://museum-guide@evil/mcp", "file://museum-guide/mcp", "http://museum-guide/mcp#fragment", "http://museum-guide/mcp?token=secret"):
+    for url in ("http://example-mcp@evil/mcp", "file://example-mcp/mcp", "http://example-mcp/mcp#fragment", "http://example-mcp/mcp?token=secret"):
         with pytest.raises(ValueError):
             validate_backend_url(url, settings)
-    validate_backend_url("http://museum-guide:8000/mcp", settings)
+    validate_backend_url("http://example-mcp:8000/mcp", settings)
     validate_backend_url("http://10.10.52.203:8655/mcp", settings)
-    validate_backend_url("https://museum-guide.evil/mcp", settings)
+    validate_backend_url("https://example-mcp.evil/mcp", settings)
     entry = {
-        "id": "museum-guide", "backend_url": "http://museum-guide:8000/mcp",
-        "approval_policy": "ask_destructive", "auth": {"type": "bearer", "credential_env": "MUSEUM_GUIDE_TOKEN"},
+        "id": "example-mcp", "backend_url": "http://example-mcp:8000/mcp",
+        "approval_policy": "ask_destructive", "auth": {"type": "bearer", "credential_env": "EXAMPLE_MCP_TOKEN"},
     }
     validate_entry(entry, settings)
-    monkeypatch.setenv("MUSEUM_GUIDE_TOKEN", "private-value")
-    server = MCPServer(auth_type="bearer", credential_env="MUSEUM_GUIDE_TOKEN")
+    monkeypatch.setenv("EXAMPLE_MCP_TOKEN", "private-value")
+    server = MCPServer(auth_type="bearer", credential_env="EXAMPLE_MCP_TOKEN")
     assert credential_headers(server) == {"Authorization": "Bearer private-value"}
-    entry["auth"] = {"type": "header", "header_name": "Host", "credential_env": "MUSEUM_GUIDE_TOKEN"}
+    entry["auth"] = {"type": "header", "header_name": "Host", "credential_env": "EXAMPLE_MCP_TOKEN"}
     with pytest.raises(ValueError):
         validate_entry(entry, settings)
 
@@ -44,7 +44,7 @@ async def test_admin_registry_and_icons(api):
     client, factory, user = api
     assert (await client.get("/api/admin/mcps")).status_code == 401
     app.dependency_overrides[current_admin] = lambda: "admin"
-    entry = {"id": "new-mcp", "title": "New MCP", "backend_url": "http://museum-guide:8000/mcp"}
+    entry = {"id": "new-mcp", "title": "New MCP", "backend_url": "http://example-mcp:8000/mcp"}
     assert (await client.post("/api/admin/mcps", json={**entry, "backend_url": "file://evil/mcp"})).status_code == 422
     assert (await client.post("/api/admin/mcps", json={**entry, "backend_url": "http://10.10.52.203:8655/mcp"})).status_code == 201
     assert (await client.delete("/api/admin/mcps/new-mcp")).status_code == 204
@@ -81,7 +81,7 @@ async def test_registry_preserves_conversation_history(api):
 
     client, factory, user = api
     app.dependency_overrides[current_admin] = lambda: "admin"
-    entry = {"id": "used-mcp", "title": "Used MCP", "backend_url": "http://museum-guide:8000/mcp"}
+    entry = {"id": "used-mcp", "title": "Used MCP", "backend_url": "http://example-mcp:8000/mcp"}
     assert (await client.post("/api/admin/mcps", json=entry)).status_code == 201
     async with factory() as session:
         session.add(Conversation(user_sub="alice", mcp_id=entry["id"], context_snapshot="context", context_sha256="f" * 64, tools_snapshot=[]))

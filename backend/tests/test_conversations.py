@@ -16,7 +16,7 @@ async def test_user_isolation_snapshots_attachments_and_cascade(api, monkeypatch
     client, factory, user = api
     async with factory() as session:
         session.add(MCPServer(
-            id="museum-guide", title="Museum", description="Demo", backend_url="http://museum-guide:8000/mcp",
+            id="example-mcp", title="Example", description="Demo", backend_url="http://example-mcp:8000/mcp",
             auth_type="none", enabled=True, approval_policy="ask_destructive",
         ))
         await session.commit()
@@ -25,7 +25,7 @@ async def test_user_isolation_snapshots_attachments_and_cascade(api, monkeypatch
         return "Static context", "f" * 64, [{"name": "lookup", "description": "Find", "requires_approval": True, "annotations": {}, "input_schema": {}}]
 
     monkeypatch.setattr(conversations, "discover", discover)
-    created = await client.post("/api/conversations", json={"mcp_id": "museum-guide"})
+    created = await client.post("/api/conversations", json={"mcp_id": "example-mcp"})
     assert created.status_code == 201, created.text
     data = created.json()
     conversation_id = data["id"]
