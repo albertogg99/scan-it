@@ -1,0 +1,1 @@
+{"error_status": 429, "body": "{\"event_id\":\"3fcde39e-0115-4914-983d-7c2cc3246850\",\"type\":\"error\",\"subscription_client\":\"dm_b7729901-877c-46b5-9414-7a58b2a1ac77\",\"error\":{\"type\":\"invalid_request_error\",\"code\":\"rate_limit_reached_error\",\"message\":\"Rate limit reached. Please try again later or contact the Swiss AI Platform for support.\"}}"}

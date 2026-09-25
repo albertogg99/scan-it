@@ -1,0 +1,70 @@
+{
+  "realm": "swiss-discover",
+  "enabled": true,
+  "displayName": "Scan it!",
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "resetPasswordAllowed": false,
+  "sslRequired": "none",
+  "loginTheme": "swiss-discover",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["en", "de", "fr", "it"],
+  "defaultLocale": "en",
+  "groups": [{ "name": "admin" }],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "firstName": "Swiss",
+      "lastName": "Administrator",
+      "email": "admin@swiss-discover.local",
+      "emailVerified": true,
+      "groups": ["/admin"],
+      "credentials": [{ "type": "password", "value": "${SWISS_DISCOVER_ADMIN_PASSWORD}", "temporary": false }]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "swiss-discover-web",
+      "name": "Scan it! Web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["http://localhost:${FRONTEND_PORT}/*", "http://${PUBLIC_HOST}:${FRONTEND_PORT}/*"],
+      "webOrigins": ["http://localhost:${FRONTEND_PORT}", "http://${PUBLIC_HOST}:${FRONTEND_PORT}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "protocolMappers": [
+        {
+          "name": "swiss-discover-groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        },
+        {
+          "name": "swiss-discover-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "swiss-discover-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ]
+}
