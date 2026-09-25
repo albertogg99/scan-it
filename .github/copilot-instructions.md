@@ -1,4 +1,10 @@
-# Dynamic MCP
+# Scan it!
+
+Monorepo: `chat-app/` (SvelteKit + FastAPI + Keycloak chat app, see
+`chat-app/README.md` and `chat-app/MCP_CONVENTIONS.md`) and `mcp-servers/`
+(Dynamic MCP runtime, rules below). Run commands from the relevant subfolder.
+
+## Dynamic MCP (`mcp-servers/`)
 
 - This is a standalone extraction of the `multi-agent` tool registry behavior.
 - Use Python 3.12 and the official MCP Python SDK 2.x.

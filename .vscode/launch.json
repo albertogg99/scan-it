@@ -5,12 +5,12 @@
             "name": "Debug Zurich Hackathon MCP",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
+            "program": "${workspaceFolder}/mcp-servers/main.py",
             "args": [
                 "--server-dir",
-                "${workspaceFolder}/servers/zurich-hackathon"
+                "${workspaceFolder}/mcp-servers/servers/zurich-hackathon"
             ],
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/mcp-servers",
             "console": "integratedTerminal",
             "env": {
                 "MCP_HOST": "127.0.0.1",
@@ -23,12 +23,12 @@
             "name": "Debug Text Tools MCP",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/main.py",
+            "program": "${workspaceFolder}/mcp-servers/main.py",
             "args": [
                 "--server-dir",
-                "${workspaceFolder}/servers/text-demo"
+                "${workspaceFolder}/mcp-servers/servers/text-demo"
             ],
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/mcp-servers",
             "console": "integratedTerminal",
             "env": {
                 "MCP_HOST": "127.0.0.1",

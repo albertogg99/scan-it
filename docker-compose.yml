@@ -1,0 +1,6 @@
+name: scan-it
+
+# Each included project keeps its own relative paths and .env file.
+include:
+  - chat-app/docker-compose.yml
+  - mcp-servers/docker-compose.yaml

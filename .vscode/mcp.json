@@ -6,7 +6,7 @@
             "args": [
                 "compose",
                 "--project-directory",
-                "${workspaceFolder}",
+                "${workspaceFolder}/mcp-servers",
                 "run",
                 "--rm",
                 "--no-deps",
@@ -24,7 +24,7 @@
             "args": [
                 "compose",
                 "--project-directory",
-                "${workspaceFolder}",
+                "${workspaceFolder}/mcp-servers",
                 "run",
                 "--rm",
                 "--no-deps",
@@ -42,7 +42,7 @@
             "args": [
                 "compose",
                 "--project-directory",
-                "${workspaceFolder}",
+                "${workspaceFolder}/mcp-servers",
                 "run",
                 "--rm",
                 "--no-deps",
@@ -60,7 +60,7 @@
             "args": [
                 "compose",
                 "--project-directory",
-                "${workspaceFolder}",
+                "${workspaceFolder}/mcp-servers",
                 "run",
                 "--rm",
                 "--no-deps",
