@@ -218,8 +218,9 @@ async def execute_call(factory, settings, run_id, call, definition, server):
                     status, failure = "succeeded", None
             except Exception:
                 result, status, failure = "MCP tool failed.", "failed", "MCP tool failed."
-    truncated = len(result) > settings.tool_output_max_chars
-    result = result[:settings.tool_output_max_chars]
+    truncated = False
+    if len(result) > settings.tool_output_warn_chars:
+        LOGGER.warning("Tool %s returned %d characters (over %d)", call.name, len(result), settings.tool_output_warn_chars)
     async with factory() as session:
         await session.execute(update(ToolCall).where(ToolCall.id == tool_id).values(status=status, result=result, error=failure, truncated=truncated))
         await session.commit()

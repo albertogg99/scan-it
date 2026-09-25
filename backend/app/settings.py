@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     max_tool_rounds: int = 6
     tool_timeout_s: int = 20
     mcp_connect_timeout_s: int = 8
-    tool_output_max_chars: int = 8000
+    tool_output_warn_chars: int = 20000
     llm_timeout_s: int = 120
     max_response_chars: int = 40000
     approval_timeout_s: int = 600

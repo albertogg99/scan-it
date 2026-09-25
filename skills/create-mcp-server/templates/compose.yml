@@ -1,0 +1,17 @@
+services:
+  <server-id>:
+    build: .
+    environment:
+      MCP_PORT: "8000"
+      # Empty means anonymous access; set in .env to require a bearer token.
+      MCP_TOKEN: ${MCP_TOKEN:-}
+      # Add upstream settings here, e.g. UPSTREAM_API_KEY: ${UPSTREAM_API_KEY:?Set UPSTREAM_API_KEY in .env}
+    ports:
+      - "${HOST_PORT:-8100}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3).close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    restart: unless-stopped
