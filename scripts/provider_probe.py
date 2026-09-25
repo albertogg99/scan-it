@@ -160,7 +160,7 @@ def main() -> int:
         return 2
     base_url = os.environ.get("LLM_BASE_URL", "https://api.publicai.co/v1").rstrip("/")
     model = os.environ.get("LLM_MODEL", "swiss-ai/apertus-v1.5-70b-thinking")
-    agent = os.environ.get("LLM_USER_AGENT", "SwissDiscover/0.1 (hackathon demo)")
+    agent = os.environ.get("LLM_USER_AGENT", "ScanIt/0.1 (hackathon demo)")
     headers = {"Authorization": f"Bearer {key}", "User-Agent": agent, "Accept": "text/event-stream"}
     names = sys.argv[1:] or list(CASES)
     results = []

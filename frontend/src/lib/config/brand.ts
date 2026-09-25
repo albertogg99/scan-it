@@ -1,1 +1,1 @@
-export const APP_NAME = 'Swiss Discover';
+export const APP_NAME = 'Scan it!';

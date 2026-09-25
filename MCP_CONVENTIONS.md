@@ -1,6 +1,6 @@
-# Swiss Discover MCP conventions
+# Scan it! MCP conventions
 
-These conventions describe how a registered MCP server supplies context to the Swiss Discover chat shell. They are an application-level agreement, not an extension to the MCP protocol. Keep the chat shell independent of the domain behind each MCP.
+These conventions describe how a registered MCP server supplies context to the Scan it! chat shell. They are an application-level agreement, not an extension to the MCP protocol. Keep the chat shell independent of the domain behind each MCP.
 
 ## Server instructions
 

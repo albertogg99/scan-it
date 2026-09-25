@@ -5,6 +5,7 @@
   import type { AdminMcp, RegistryEntry } from '$lib/api/types';
   import { login, logout } from '$lib/auth/session';
   import { apiBase } from '$lib/config/runtime';
+  import { APP_NAME } from '$lib/config/brand';
 
   const blank = (): RegistryEntry => ({ id: '', title: '', description: '', backend_url: '', public_url: '', enabled: true, approval_policy: 'ask_destructive', auth: { type: 'none', header_name: '', credential_env: '' } });
   let pageStatus = $state<'loading' | 'ready' | 'signed-out' | 'forbidden' | 'error'>('loading');
@@ -78,7 +79,7 @@
   onMount(() => { void load(); });
 </script>
 
-<svelte:head><title>MCP Registry | Swiss Discover</title></svelte:head>
+<svelte:head><title>MCP Registry | {APP_NAME}</title></svelte:head>
 <section class="admin-page">
   <a class="quiet-link" href="/"><ArrowLeft size={16} /> Explore</a>
   <div class="admin-heading"><div><p class="eyebrow">Administration</p><h1>MCP Registry</h1></div>

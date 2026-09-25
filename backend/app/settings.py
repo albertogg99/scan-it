@@ -7,14 +7,14 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=None, extra="ignore")
 
-    app_name: str = "Swiss Discover"
+    app_name: str = "Scan it!"
     database_url: str = "postgresql+asyncpg://postgres:postgres@postgres:5432/swiss_discover"
     llm_base_url: str = "https://api.publicai.co/v1"
     llm_model: str = "swiss-ai/apertus-v1.5-70b-thinking"
     llm_api_key: str | None = None
     swisscom_api_key: str | None = None
     public_ai_api_key: str | None = None
-    llm_user_agent: str = "SwissDiscover/0.1 (hackathon demo)"
+    llm_user_agent: str = "ScanIt/0.1 (hackathon demo)"
     llm_image_input: Literal["supported", "unsupported", "unknown"] = "unknown"
     llm_audio_input: Literal["supported", "unsupported", "unknown"] = "unknown"
     stt_base_url: str | None = None

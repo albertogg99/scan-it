@@ -104,14 +104,14 @@ services:
       dockerfile: backend/Dockerfile
     command: ["sh", "-ec", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000"]
     environment:
-      APP_NAME: Swiss Discover
+      APP_NAME: "Scan it!"
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/swiss_discover
       LLM_BASE_URL: ${LLM_BASE_URL:-https://api.publicai.co/v1}
       LLM_MODEL: ${LLM_MODEL:-swiss-ai/apertus-v1.5-70b-thinking}
       LLM_API_KEY: ${LLM_API_KEY:-${SWISSCOM_API_KEY:-}}
       PUBLIC_AI_API_KEY: ${PUBLIC_AI_API_KEY:-}
       SWISSCOM_API_KEY: ${SWISSCOM_API_KEY:-}
-      LLM_USER_AGENT: ${LLM_USER_AGENT:-SwissDiscover/0.1 (hackathon demo)}
+      LLM_USER_AGENT: ${LLM_USER_AGENT:-ScanIt/0.1 (hackathon demo)}
       LLM_IMAGE_INPUT: ${LLM_IMAGE_INPUT:-unknown}
       LLM_AUDIO_INPUT: ${LLM_AUDIO_INPUT:-unknown}
       STT_BASE_URL: ${STT_BASE_URL:-}

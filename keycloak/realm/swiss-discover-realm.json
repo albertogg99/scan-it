@@ -1,7 +1,7 @@
 {
   "realm": "swiss-discover",
   "enabled": true,
-  "displayName": "Swiss Discover",
+  "displayName": "Scan it!",
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "resetPasswordAllowed": false,
@@ -26,7 +26,7 @@
   "clients": [
     {
       "clientId": "swiss-discover-web",
-      "name": "Swiss Discover Web",
+      "name": "Scan it! Web",
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,

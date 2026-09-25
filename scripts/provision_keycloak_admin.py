@@ -51,7 +51,7 @@ def provision():
         api("users", "POST", user)
         users = api("users?username=admin&exact=true")
     api(f"users/{users[0]['id']}/groups/{group['id']}", "PUT")
-    print("Swiss Discover admin group, token mapper, and account are configured. Existing passwords are unchanged.")
+    print("Scan it! admin group, token mapper, and account are configured. Existing passwords are unchanged.")
 
 
 if __name__ == "__main__":

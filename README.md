@@ -1,4 +1,4 @@
-# Swiss Discover
+# Scan it!
 
 Local chat for two independent MCP demos: live Zurich transit and a fictional museum guide. The SvelteKit frontend uses Keycloak login; FastAPI stores conversations, attachments, runs, and bounded stream events in PostgreSQL. See [the walkthrough](docs/WALKTHROUGH.md), [provider notes](docs/PROVIDER.md), [external clients](docs/CLIENTS.md), and [API contracts](docs/CONTRACTS.md).
 

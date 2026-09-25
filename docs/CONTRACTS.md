@@ -1,10 +1,10 @@
-# Swiss Discover shared contracts
+# Scan it! shared contracts
 
 Implemented API and persistence reference; when documentation disagrees with deployed behavior, check the code. Product brief: `chat_app_initial_prompt.md`; MCP rules: `MCP_CONVENTIONS.md`. Setup: `../README.md`.
 
 ## Naming and layout
 
-- Product name lives only in `frontend/src/lib/config/brand.ts` (`APP_NAME`) and backend setting `APP_NAME` (default `Swiss Discover`). Keycloak theme reads display name from the realm (`displayName`).
+- Product name lives only in `frontend/src/lib/config/brand.ts` (`APP_NAME`) and backend setting `APP_NAME` (default `Scan it!`). Keycloak theme reads display name from the realm (`displayName`).
 - Repo layout:
 
 ```
@@ -42,7 +42,7 @@ frontend/           SvelteKit + TS, adapter-node, vitest
 frontend `http://${PUBLIC_HOST}:${FRONTEND_PORT}`, API `http://${PUBLIC_HOST}:${BACKEND_PORT}`, issuer `http://${PUBLIC_HOST}:${KEYCLOAK_PORT}/realms/swiss-discover`. Compose defaults these ports to 3000/8000/8080 and propagates overrides into issuer, realm import, CORS and frontend URLs. Existing realm clients require an explicit redirect/web-origin update after frontend host or port changes. PostgreSQL's host port is bound to loopback.
 
 Backend env (all have safe defaults for local dev except secrets):
-`APP_NAME`, `DATABASE_URL` (`postgresql+asyncpg://...`; tests use `sqlite+aiosqlite://`), `LLM_BASE_URL` (`https://api.publicai.co/v1`), `LLM_MODEL` (`swiss-ai/apertus-v1.5-70b-thinking`), `LLM_API_KEY` or `SWISSCOM_API_KEY` or `PUBLIC_AI_API_KEY`, `LLM_USER_AGENT` (`SwissDiscover/0.1 (hackathon demo)`), `LLM_IMAGE_INPUT` (`supported|unsupported|unknown`, default `unknown`), `OIDC_ISSUER`, `OIDC_JWKS_URL` (internal in Compose, e.g. `http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs`), `OIDC_AUDIENCE` (`swiss-discover-api`), `CORS_ORIGINS` (comma list), `MUSEUM_GUIDE_TOKEN`, `USE_OS_TRUSTSTORE` (default false), limits `MAX_TOOL_ROUNDS=6`, `TOOL_TIMEOUT_S=20`, `MCP_CONNECT_TIMEOUT_S=8`, `TOOL_OUTPUT_MAX_CHARS=8000`, `LLM_TIMEOUT_S=120`, `MAX_RESPONSE_CHARS=40000`, `APPROVAL_TIMEOUT_S=600`, `MAX_UPLOAD_BYTES=5242880`, `ALLOWED_IMAGE_MIME=image/png,image/jpeg,image/webp,image/gif`, `MAX_MESSAGE_CHARS=8000`.
+`APP_NAME`, `DATABASE_URL` (`postgresql+asyncpg://...`; tests use `sqlite+aiosqlite://`), `LLM_BASE_URL` (`https://api.publicai.co/v1`), `LLM_MODEL` (`swiss-ai/apertus-v1.5-70b-thinking`), `LLM_API_KEY` or `SWISSCOM_API_KEY` or `PUBLIC_AI_API_KEY`, `LLM_USER_AGENT` (`ScanIt/0.1 (hackathon demo)`), `LLM_IMAGE_INPUT` (`supported|unsupported|unknown`, default `unknown`), `OIDC_ISSUER`, `OIDC_JWKS_URL` (internal in Compose, e.g. `http://keycloak:8080/realms/swiss-discover/protocol/openid-connect/certs`), `OIDC_AUDIENCE` (`swiss-discover-api`), `CORS_ORIGINS` (comma list), `MUSEUM_GUIDE_TOKEN`, `USE_OS_TRUSTSTORE` (default false), limits `MAX_TOOL_ROUNDS=6`, `TOOL_TIMEOUT_S=20`, `MCP_CONNECT_TIMEOUT_S=8`, `TOOL_OUTPUT_MAX_CHARS=8000`, `LLM_TIMEOUT_S=120`, `MAX_RESPONSE_CHARS=40000`, `APPROVAL_TIMEOUT_S=600`, `MAX_UPLOAD_BYTES=5242880`, `ALLOWED_IMAGE_MIME=image/png,image/jpeg,image/webp,image/gif`, `MAX_MESSAGE_CHARS=8000`.
 
 Backend key precedence is `LLM_API_KEY` > `SWISSCOM_API_KEY` > `PUBLIC_AI_API_KEY`; `USE_OS_TRUSTSTORE=true` is optional only where the OS trust store is required for HTTPS (never use `verify=False`). The historical Swisscom probe used a key named `PUBLIC_AI_API_KEY`; the default Public AI endpoint rejected it with HTTP 401. See `PROVIDER.md`.
 

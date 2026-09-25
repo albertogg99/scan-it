@@ -1,6 +1,6 @@
-# Swiss Discover: implementation brief
+# Scan it!: implementation brief
 
-Build a desktop-oriented, responsive, MCP-agnostic chat experience for the Zurich AI Hackathon. A visitor scans a QR code or follows a link for a place or service (for example, a museum or tram stop), chooses to chat here or configure another client, and gets an assistant grounded in that MCP server's prompt, tools, and live or static data. "Swiss Discover" is a provisional product name: keep naming in one configurable place.
+Build a desktop-oriented, responsive, MCP-agnostic chat experience for the Zurich AI Hackathon. A visitor scans a QR code or follows a link for a place or service (for example, a museum or tram stop), chooses to chat here or configure another client, and gets an assistant grounded in that MCP server's prompt, tools, and live or static data. "Scan it!" is a provisional product name: keep naming in one configurable place.
 
 This document is the implementation brief, not permission to start implementation yet. Before coding, present the architecture and milestones, confirm unresolved provider/client capabilities with small experiments, and then implement one localized step at a time. Use the Strong sub task implementer agent for each clearly scoped implementation step, running independent steps in parallel only when files and contracts do not overlap. Report verification after each step.
 
