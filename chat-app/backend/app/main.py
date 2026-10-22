@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app.api import admin, attachments, config, conversations, health, public, runs
 from app.agent.manager import reconciliate
 from app.persistence.session import purge_unattached, session_factory
+from app.registry.defaults import seed_default_servers
 from app.settings import get_settings
 
 
@@ -15,6 +16,7 @@ from app.settings import get_settings
 async def lifespan(application: FastAPI):
     async with session_factory() as session:
         await purge_unattached(session)
+        await seed_default_servers(session)
     await reconciliate(session_factory)
     yield
 
