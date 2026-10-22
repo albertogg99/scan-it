@@ -1,0 +1,8 @@
+{
+  "code": "00",
+  "description": "Data recovered OK",
+  "datetime": "2026-10-22T10:15:00.000000",
+  "data": [
+    {"date": "22/10/2026 0:00:00", "strike": "N", "dayType": "LA"}
+  ]
+}

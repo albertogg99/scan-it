@@ -1,0 +1,13 @@
+{
+  "code": "00",
+  "description": "Data recovered OK",
+  "datetime": "2026-10-22T10:15:00.000000",
+  "data": [
+    {
+      "item": [
+        {"title": "Línea 27: desvío en Plaza de Castilla", "description": "<div>Los autobuses <strong>desviarán</strong> su recorrido.</div>", "category": "27", "rssAfectaDesde": "2026-10-21T00:00:00", "rssAfectaHasta": "2026-10-30T23:59:00", "GoogleTransitCause": "CONSTRUCTION", "GoogleTransitEffect": "DETOUR", "enclosure": {"@url": "https://www.emtmadrid.es/Home"}},
+        {"title": "Línea N1: servicio reducido", "description": "Servicio reducido por obras.", "category": "N1", "rssAfectaDesde": "2026-10-15T00:00:00", "rssAfectaHasta": "2026-11-15T23:59:00", "GoogleTransitCause": "MAINTENANCE", "GoogleTransitEffect": "REDUCED_SERVICE", "enclosure": {"@url": "javascript:alert(1)"}}
+      ]
+    }
+  ]
+}

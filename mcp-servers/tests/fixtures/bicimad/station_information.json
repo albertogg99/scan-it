@@ -1,0 +1,373 @@
+{
+ "last_updated": 1792658905,
+ "ttl": 29,
+ "data": {
+  "stations": [
+   {
+    "station_id": "1424",
+    "name": "20 - Banco de España",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.4188076,
+    "lon": -3.6952465,
+    "altitude": 0.0,
+    "address": "Calle Alcalá, 48",
+    "capacity": 47,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "20",
+    "short_name": "20",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "1428",
+    "name": "25A - Plaza de Celenque A",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.4173703,
+    "lon": -3.7057791,
+    "altitude": 0.0,
+    "address": "Plaza de Celenque, 1",
+    "capacity": 44,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "25A",
+    "short_name": "25A",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "1437",
+    "name": "33 - Puerta del Sol",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.4165363,
+    "lon": -3.7032264,
+    "altitude": 0.0,
+    "address": "Calle Carretas, 3",
+    "capacity": 43,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "33",
+    "short_name": "33",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "1464",
+    "name": "60 - Puerta de Alcalá",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.418852490562614,
+    "lon": -3.689098056552884,
+    "altitude": 0.0,
+    "address": "Calle Valenzuela, 3",
+    "capacity": 44,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "60",
+    "short_name": "60",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "1468",
+    "name": "65 - Parque del Retiro - Calle Antonio Maura",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.4167014469994,
+    "lon": -3.6894247979427686,
+    "altitude": 0.0,
+    "address": "Calle Antonio Maura, 13",
+    "capacity": 49,
+    "is_charging_station": true,
+    "geofenced_capacity": 25,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "65",
+    "short_name": "65",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "1472",
+    "name": "70 - Hospital Univ. Infantil Niño Jesús",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.415382385574716,
+    "lon": -3.677872542327878,
+    "altitude": 0.0,
+    "address": "Avenida de Menéndez Pelayo, 63",
+    "capacity": 47,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "70",
+    "short_name": "70",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "1489",
+    "name": "86 - Cibeles",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.4186516,
+    "lon": -3.6933498,
+    "altitude": 0.0,
+    "address": "Paseo del Prado, 1B ",
+    "capacity": 43,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "86",
+    "short_name": "86",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "2117",
+    "name": "273 - Delicias - General Lacy",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.40381914,
+    "lon": -3.6909183100000003,
+    "altitude": 0.0,
+    "address": "Calle de las Delicias, 41 ",
+    "capacity": 39,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "273",
+    "short_name": "273",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "2274",
+    "name": "80A - Estación de Atocha A",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.407573,
+    "lon": -3.690538,
+    "altitude": 0.0,
+    "address": "Avenida Ciudad de Barcelona (esquina con Plaza de Carlos V)",
+    "capacity": 23,
+    "is_charging_station": true,
+    "geofenced_capacity": 0,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "80A",
+    "short_name": "80A",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "2275",
+    "name": "80B - Estación de Atocha B",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.4075211,
+    "lon": -3.6904748,
+    "altitude": 0.0,
+    "address": "Avenida Ciudad de Barcelona (esquina con Plaza de Carlos V)",
+    "capacity": 47,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "80B",
+    "short_name": "80B",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "2306",
+    "name": "282 - Parque Retiro - Puerta Reina Mercedes",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.4181327,
+    "lon": -3.6787796,
+    "altitude": 0.0,
+    "address": "Avenida Menéndez Pelayo (frente al número 33)",
+    "capacity": 43,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "282",
+    "short_name": "282",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "2307",
+    "name": "1 - Metro Sol",
+    "physical_configuration": "ELECTRICBIKESTATION",
+    "lat": 40.416465,
+    "lon": -3.7054098,
+    "altitude": 0.0,
+    "address": "Calle Mayor , 6",
+    "capacity": 43,
+    "is_charging_station": true,
+    "geofenced_capacity": 20,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Eléctricas"
+    ],
+    "obcn": "1",
+    "short_name": "1",
+    "nearby_distance": 0.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   },
+   {
+    "station_id": "2444",
+    "name": "66 - Ronda de las Flores",
+    "physical_configuration": "REGULAR",
+    "lat": 40.449332,
+    "lon": -3.76433,
+    "altitude": 0.0,
+    "address": "Ronda de las Flores, 29",
+    "capacity": 23,
+    "is_charging_station": false,
+    "geofenced_capacity": 0,
+    "rental_methods": [
+     "key",
+     "transitcard",
+     "creditcard",
+     "phone"
+    ],
+    "is_virtual_station": false,
+    "groups": [
+     "Estaciones Solares"
+    ],
+    "obcn": "66",
+    "short_name": "66",
+    "nearby_distance": 500.0,
+    "_bluetooth_id": "",
+    "_ride_code_support": true,
+    "rental_uris": {}
+   }
+  ]
+ },
+ "version": "2.3"
+}

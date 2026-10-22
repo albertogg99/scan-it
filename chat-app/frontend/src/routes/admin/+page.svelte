@@ -151,7 +151,7 @@
   h2 { font-size: 1.1rem; margin: 0; }
   .list-heading { margin-bottom: 16px; }
   .server-row { width: 100%; text-align: left; justify-content: flex-start; padding: 14px 8px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; gap: 12px; }
-  .server-row.selected { background: var(--surface); box-shadow: inset 3px 0 #c52d30; }
+  .server-row.selected { background: var(--surface); box-shadow: inset 3px 0 #0071CE; }
   .server-name { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
   .server-name strong { font-size: .9rem; font-weight: 500; }
   .server-name small { color: #77736c; }
@@ -164,7 +164,7 @@
   fieldset { padding: 0; margin: 0; border: 0; min-width: 0; }
   label { display: flex; flex-wrap: wrap; gap: 7px; font-size: .85rem; margin-bottom: 18px; min-width: 0; }
   input:not([type='checkbox']), textarea, select { width: 100%; min-width: 0; border: 1px solid var(--line); background: var(--surface); color: inherit; padding: 10px 12px; border-radius: 3px; }
-  input:focus, textarea:focus, select:focus { outline: 2px solid #c52d30; outline-offset: 2px; }
+  input:focus, textarea:focus, select:focus { outline: 2px solid #0071CE; outline-offset: 2px; }
   input:disabled { opacity: .6; }
   textarea { resize: vertical; }
   .field-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
@@ -173,7 +173,7 @@
   .icon-placeholder { display: grid; place-items: center; width: 48px; height: 48px; flex: 0 0 48px; border: 1px solid var(--line); }
   input[type='file'] { padding: 7px; font-size: .78rem; }
   .enabled-field { align-items: center; gap: 10px; }
-  input[type='checkbox'] { width: 17px; height: 17px; accent-color: #c52d30; }
+  input[type='checkbox'] { width: 17px; height: 17px; accent-color: #0071CE; }
   .form-actions { border-top: 1px solid var(--line); padding-top: 20px; }
   .admin-error, .admin-notice { padding: 12px 0; overflow-wrap: anywhere; }
   .admin-error { color: #bd3434; }

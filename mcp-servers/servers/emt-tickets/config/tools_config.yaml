@@ -1,0 +1,78 @@
+emt_tickets:
+  currency: EUR
+  timezone: Europe/Madrid
+  max_bookings: 5000
+  products:
+    - id: single
+      category: single
+      name: Billete sencillo EMT
+      name_en: EMT single ticket
+      description: Un viaje en autobús EMT (no válido en el Exprés Aeropuerto).
+      description_en: One trip on EMT buses (not valid on the Exprés Aeropuerto).
+      price: "1.50"
+      validity: Un viaje.
+      validity_en: One trip.
+      source_url: https://www.emtmadrid.es/ViajarenBus/Titulosytarifas
+    - id: metrobus_10
+      category: multi
+      name: Billete 10 viajes (Metrobús)
+      name_en: 10-trip ticket (Metrobús)
+      description: 10 viajes en EMT (excepto Exprés Aeropuerto), Metro zona A y ML1.
+      description_en: 10 trips on EMT (except Exprés Aeropuerto), Metro zone A and ML1.
+      price: "7.30"
+      validity: 10 viajes.
+      validity_en: 10 trips.
+      source_url: https://www.crtm.es/billetes-y-tarifas/buscador/sencillos-y-10-viajes/
+    - id: bicibus
+      category: single
+      name: BicibusEMT
+      name_en: BicibusEMT
+      description: Viaje en autobús con trasbordos de 90 min, incluye trayectos de BiciMAD de hasta 30 min.
+      description_en: Bus trip with 90 min transfers, including BiciMAD rides of up to 30 min.
+      price: "1.80"
+      validity: Trasbordos durante 90 minutos.
+      validity_en: Transfers within 90 minutes.
+      source_url: https://www.emtmadrid.es/ViajarenBus/Titulosytarifas
+    - id: airport_express
+      category: airport
+      name: Exprés Aeropuerto (línea 203)
+      name_en: Airport Express (line 203)
+      description: Un viaje en el Exprés Aeropuerto, tarifa única.
+      description_en: One trip on the Airport Express, flat fare.
+      price: "5.00"
+      validity: Un viaje en la línea 203.
+      validity_en: One trip on line 203.
+      source_url: https://www.emtmadrid.es/Aeropuerto
+    - {id: tourist_A_1d, category: tourist, zone: A, days: 1, price: "10.30"}
+    - {id: tourist_A_2d, category: tourist, zone: A, days: 2, price: "17.50"}
+    - {id: tourist_A_3d, category: tourist, zone: A, days: 3, price: "23.10"}
+    - {id: tourist_A_4d, category: tourist, zone: A, days: 4, price: "27.80"}
+    - {id: tourist_A_5d, category: tourist, zone: A, days: 5, price: "33.40"}
+    - {id: tourist_A_7d, category: tourist, zone: A, days: 7, price: "43.20"}
+    - {id: tourist_T_1d, category: tourist, zone: T, days: 1, price: "15.40"}
+    - {id: tourist_T_2d, category: tourist, zone: T, days: 2, price: "26.20"}
+    - {id: tourist_T_3d, category: tourist, zone: T, days: 3, price: "35.00"}
+    - {id: tourist_T_4d, category: tourist, zone: T, days: 4, price: "43.20"}
+    - {id: tourist_T_5d, category: tourist, zone: T, days: 5, price: "50.40"}
+    - {id: tourist_T_7d, category: tourist, zone: T, days: 7, price: "62.80"}
+  tourist:
+    child_percent: 50
+    source_url: https://www.crtm.es/billetes-y-tarifas/buscador/billete-turistico/
+  airport:
+    line: "203"
+    product_id: airport_express
+    capacity: 30
+    day_first: "06:00"
+    day_last: "23:15"
+    day_interval_min: 15
+    night_first: "23:30"
+    night_interval_min: 35
+    night_until: "06:00"
+    max_days_ahead: 30
+    origins:
+      atocha: {code: ATO, stop_id: "5709", name: Atocha, offset_min: 0}
+      cibeles: {code: CIB, stop_id: "72", name: Cibeles, offset_min: 8}
+    terminals:
+      T1: 30
+      T2: 35
+      T4: 40

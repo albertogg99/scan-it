@@ -10,7 +10,10 @@ main.py                         Shared startup and tool loader
 Dockerfile                      Server-independent base image
 docker-compose.yaml             One service per server
 servers/
-  zurich-hackathon/              Offline Zurich Hackathon handbook
+  emt-bus-stop/                  Live EMT Madrid stop 72 Cibeles (MobilityLabs)
+  emt-tickets/                   Demo EMT ticketing and airport seat booking
+  bicimad/                       City-wide BiciMAD availability and prices (GBFS)
+  zurich-hackathon/              Offline Zurich Hackathon handbook (legacy profile)
     config/
       tools_config.yaml
       server_instructions.md
@@ -50,8 +53,19 @@ tests/
 Requires Docker Engine and the Docker Compose plugin. On WSL, enable Docker
 Desktop integration for your distro first.
 
+`docker compose up --build -d` starts the three EMT Madrid servers:
+
+| Service | Endpoint | Port variable |
+| --- | --- | --- |
+| `emt-bus-stop` | http://localhost:8561/mcp | `EMT_BUS_STOP_PORT` |
+| `emt-tickets` | http://localhost:8562/mcp | `EMT_TICKETS_PORT` |
+| `bicimad` | http://localhost:8563/mcp | `BICIMAD_PORT` |
+
+The previous Swiss servers below are in the `legacy` profile and only start with
+`docker compose --profile legacy up --build -d`.
+
 ```bash
-docker compose up --build -d zurich-hackathon
+docker compose --profile legacy up --build -d zurich-hackathon
 docker compose logs -f zurich-hackathon
 ```
 
@@ -70,11 +84,11 @@ docker compose up --build -d public-transport
 ```
 
 The transport endpoint is **http://localhost:8560/mcp**, bound to localhost.
-All three non-example services start with `docker compose up --build -d`.
+The three legacy services start with `docker compose --profile legacy up --build -d`.
 The transport server can start without a token, but only its origin tool works
 until a valid token is configured.
 
-To run all four bundled servers, including the optional example:
+To also start the optional example (add `--profile legacy` for the Swiss servers):
 
 ```bash
 docker compose --profile examples up --build -d
@@ -97,6 +111,48 @@ When migrating a running single-server checkout, stop the old `dynamic-mcp`
 service once with `docker compose --profile examples down --remove-orphans`
 before starting the new services. This stops containers belonging to this Compose
 project. The old top-level tools and configuration now live in `servers/text-demo/`.
+
+## EMT Madrid Servers
+
+These servers back the EMT Madrid demo: a QR code at a stop opens the chat.
+All answer in the user's language (Spanish by default).
+
+### `emt-bus-stop`: stop 72 Cibeles - Casa de América
+
+Uses the [EMT MobilityLabs OpenAPI](https://apidocs.emtmadrid.es/). The stop is
+fixed in `servers/emt-bus-stop/config/tools_config.yaml`.
+
+| Tool | Purpose |
+| --- | --- |
+| `get_stop_info()` | Stop name, address and lines with first/last bus and frequencies. |
+| `get_arrivals(line=None, limit=12, include_incidents=True, force_refresh=False)` | Live arrival estimates and notices affecting the stop. |
+| `get_line_info(line, date=None)` | Line headers and timetable for the date's day type. |
+| `get_line_stops(line, direction=1, limit=80)` | Ordered stops of a line, marking stop 72. |
+| `get_line_timetable(line)` | First/last service per direction and day type. |
+| `get_line_incidents(line=None)` | Current notices for one line or the whole network. |
+
+MobilityLabs requires a free account at https://mobilitylabs.emtmadrid.es.
+Set either `EMT_CLIENT_ID` + `EMT_PASSKEY` (registered app, preferred) or
+`EMT_EMAIL` + `EMT_PASSWORD` in `mcp-servers/.env` (git-ignored), then run
+`docker compose up -d --force-recreate emt-bus-stop`. Without credentials the
+tools return a "not configured" error. Credentials are never logged or returned.
+
+### `emt-tickets`: demo ticketing
+
+No network access, payment or real tickets. Prices for the single ticket,
+10-trip Metrobús, BicibusEMT, Exprés Aeropuerto and tourist passes were checked
+on 2026-10-22 and live in `config/tools_config.yaml`. Airport-express trips are a
+synthetic schedule from Atocha and Cibeles. Bookings are kept in memory and lost
+on restart. `purchase_ticket`, `reserve_airport_seat` and `cancel_booking` are
+annotated as destructive, so the chat asks for confirmation before running them.
+
+### `bicimad`: city-wide bike availability
+
+Reads the public BiciMAD GBFS 2.3 feed
+(`https://madrid.publicbikesystem.net/customer/gbfs/v2/gbfs.json`, no login).
+Tools: `search_bike_stations`, `find_bike_stations_near`, `get_bike_station`,
+`get_bicimad_summary` and `get_bicimad_prices`. The GBFS pricing feed is empty,
+so prices come from a dated snapshot of bicimad.com in the server config.
 
 ## Zurich Hackathon Information
 

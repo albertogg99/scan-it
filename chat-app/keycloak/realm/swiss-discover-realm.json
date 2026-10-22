@@ -1,15 +1,15 @@
 {
   "realm": "swiss-discover",
   "enabled": true,
-  "displayName": "Scan it!",
+  "displayName": "Scan it! · EMT Madrid",
   "registrationAllowed": true,
   "loginWithEmailAllowed": true,
   "resetPasswordAllowed": false,
   "sslRequired": "none",
   "loginTheme": "swiss-discover",
   "internationalizationEnabled": true,
-  "supportedLocales": ["en", "de", "fr", "it"],
-  "defaultLocale": "en",
+  "supportedLocales": ["en", "de", "fr", "it", "es"],
+  "defaultLocale": "es",
   "groups": [{ "name": "admin" }],
   "users": [
     {

@@ -1,0 +1,89 @@
+{
+ "last_updated": 1792658887,
+ "ttl": 7,
+ "data": {
+  "vehicle_types": [
+   {
+    "vehicle_type_id": "ICONIC",
+    "form_factor": "bicycle",
+    "propulsion_type": "human",
+    "max_range_meters": 0.0,
+    "name": "ICONIC",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "FIT",
+    "form_factor": "bicycle",
+    "propulsion_type": "human",
+    "max_range_meters": 0.0,
+    "name": "FIT",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "BOOST",
+    "form_factor": "bicycle",
+    "propulsion_type": "electric_assist",
+    "max_range_meters": 70000.0,
+    "name": "BOOST",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "EFIT",
+    "form_factor": "bicycle",
+    "propulsion_type": "electric_assist",
+    "max_range_meters": 70000.0,
+    "name": "EFIT",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "CHLOE",
+    "form_factor": "scooter_standing",
+    "propulsion_type": "electric",
+    "max_range_meters": 0.0,
+    "name": "CHLOE",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "COSMO",
+    "form_factor": "bicycle",
+    "propulsion_type": "electric_assist",
+    "max_range_meters": 60000.0,
+    "name": "COSMO",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "ASTRO",
+    "form_factor": "bicycle",
+    "propulsion_type": "electric_assist",
+    "max_range_meters": 70000.0,
+    "name": "ASTRO",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "METRO_BASE",
+    "form_factor": "bicycle",
+    "propulsion_type": "human",
+    "max_range_meters": 0.0,
+    "name": "METRO_BASE",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "METRO_CONNECTED",
+    "form_factor": "bicycle",
+    "propulsion_type": "human",
+    "max_range_meters": 0.0,
+    "name": "METRO_CONNECTED",
+    "default_pricing_plan_id": ""
+   },
+   {
+    "vehicle_type_id": "TRAILER",
+    "form_factor": "other",
+    "propulsion_type": "human",
+    "max_range_meters": 0.0,
+    "name": "TRAILER",
+    "default_pricing_plan_id": ""
+   }
+  ]
+ },
+ "version": "2.3"
+}

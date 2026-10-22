@@ -30,6 +30,11 @@ docker compose ps
 Each included project reads its own `.env` (`chat-app/.env`,
 `mcp-servers/.env`). Either project can still be run on its own from its folder.
 
-All services share one Compose network, so in `/admin` register the bundled MCP
-servers with their internal URLs, e.g. `http://zurich-hackathon:8555/mcp`,
-`http://basel-parking:8555/mcp`, `http://public-transport:8555/mcp`.
+All services share one Compose network. Fresh databases are seeded with the
+three EMT Madrid servers: `http://emt-bus-stop:8555/mcp`,
+`http://emt-tickets:8555/mcp` and `http://bicimad:8555/mcp`. The previous Swiss
+demo servers (`zurich-hackathon`, `basel-parking`, `public-transport`) remain in
+the repository but only start with `docker compose --profile legacy up -d`.
+
+Live bus arrivals need free EMT MobilityLabs credentials in `mcp-servers/.env`
+(see [mcp-servers/README.md](mcp-servers/README.md#emt-madrid-servers)).

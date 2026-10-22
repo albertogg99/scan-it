@@ -1,0 +1,10 @@
+{
+  "code": "00",
+  "description": "Data recovered OK",
+  "datetime": "2026-10-22T10:15:00.000000",
+  "data": [
+    {"line": "005", "dateIni": "2026-09-01", "dateEnd": "2026-12-31", "firstTimeServiceA": "06:00", "endTimeServiceA": "23:30", "firstTimeServiceB": "06:05", "endTimeServiceB": "23:35", "dayType": "LA"},
+    {"line": "005", "dateIni": "2026-09-01", "dateEnd": "2026-12-31", "firstTimeServiceA": "06:30", "endTimeServiceA": "23:30", "firstTimeServiceB": "06:35", "endTimeServiceB": "23:35", "dayType": "SA"},
+    {"line": "005", "dateIni": "2026-09-01", "dateEnd": "2026-12-31", "firstTimeServiceA": "07:00", "endTimeServiceA": "23:30", "firstTimeServiceB": "07:05", "endTimeServiceB": "23:35", "dayType": "FE"}
+  ]
+}

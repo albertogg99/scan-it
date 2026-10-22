@@ -1,0 +1,15 @@
+{
+  "code": "00",
+  "description": "Data recovered OK",
+  "datetime": "2026-10-22T10:15:00.000000",
+  "data": [
+    {
+      "stops": [
+        {"stop": "70", "name": "Puerta de Alcalá", "postalAddress": "Calle de Alcalá, 1", "geometry": {"type": "Point", "coordinates": [-3.6886, 40.4202]}, "dataLine": []},
+        {"stop": "72", "name": "Cibeles - Casa de América", "postalAddress": "Paseo de Recoletos, 2", "geometry": {"type": "Point", "coordinates": [-3.69214, 40.42031]}, "dataLine": []},
+        {"stop": "74", "name": "Recoletos", "postalAddress": "Paseo de Recoletos, 12", "geometry": {"type": "Point", "coordinates": [-3.6910, 40.4225]}, "dataLine": []}
+      ],
+      "timeTable": {"StartTime": "06:00", "StopTime": "23:30"}
+    }
+  ]
+}

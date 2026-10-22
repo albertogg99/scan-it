@@ -26,7 +26,7 @@ EVENT_LOCK = asyncio.Lock()
 TOOL_NAME = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 LOGGER = logging.getLogger(__name__)
 SYSTEM_PROMPT = (
-    "You are Apertus, a friendly, thoughtful chatbot. Help people with clear, natural, concise answers "
+    "You are an AI model, a friendly, thoughtful chatbot. Help people with clear, natural, concise answers "
     "in their language. You have access to information and tools about the place or service described "
     "in the supplied context. You are not that service, an MCP server, or a tool. "
     "Use relevant tools yourself to answer the user's request; do not tell the user to call functions, for permission of if they want you to call any tool, instead just call them inmediately to retrieve the necesarry info. Do not delay or ask for confirmation unnecessarily. "
@@ -113,6 +113,34 @@ async def reconciliate(factory):
         await session.commit()
     for run in runs:
         await emit(factory, run.id, "run.failed", code="internal_error", message="Run interrupted by server restart.")
+
+
+def schema_types(schema):
+    kinds = schema.get("type")
+    found = set(kinds if isinstance(kinds, list) else [kinds] if kinds else [])
+    for option in (schema.get("anyOf") or []) + (schema.get("oneOf") or []):
+        if isinstance(option, dict):
+            found |= schema_types(option)
+    return found
+
+
+def coerce_arguments(arguments, schema):
+    # Models often send 53 for a string parameter (or "5" for an integer); fix scalars to the declared type.
+    properties = (schema or {}).get("properties") or {}
+    for key, value in list(arguments.items()):
+        kinds = schema_types(properties.get(key) or {})
+        if "string" in kinds and isinstance(value, (int, float)) and not isinstance(value, bool):
+            arguments[key] = str(value)
+        elif "integer" in kinds and isinstance(value, str) and re.fullmatch(r"-?\d+", value.strip()):
+            arguments[key] = int(value)
+        elif "number" in kinds and isinstance(value, str):
+            try:
+                arguments[key] = float(value)
+            except ValueError:
+                pass
+        elif "boolean" in kinds and isinstance(value, str) and value.strip().lower() in ("true", "false"):
+            arguments[key] = value.strip().lower() == "true"
+    return arguments
 
 
 def tool_definitions(snapshot):
@@ -323,7 +351,8 @@ async def worker(factory, settings, run_id):
                     if not isinstance(arguments, dict):
                         raise ValueError
                     if definition:
-                        validate(arguments, definition.get("input_schema") or {"type": "object"})
+                        schema = definition.get("input_schema") or {"type": "object"}
+                        validate(coerce_arguments(arguments, schema), schema)
                 except (ValueError, ValidationError, SchemaError):
                     arguments, failure = None, "Invalid tool arguments."
                 if not definition:

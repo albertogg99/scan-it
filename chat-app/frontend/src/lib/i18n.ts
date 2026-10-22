@@ -1,6 +1,6 @@
 const en = {
   search: 'Search applications', noResults: 'No matching applications', clearSearch: 'Clear search',
-  explore: 'Explore with Apertus', open: 'Open',
+  explore: 'Explore with AI', open: 'Open',
   chat: 'Local Chat', configure: 'Configure other chatbots', back: 'Back', unavailable: 'Service unavailable', notFound: 'Service not found', retry: 'Retry',
   collapseSidebar: 'Collapse sidebar', expandSidebar: 'Expand sidebar',
   disconnected: 'This service is not reachable right now.', choose: 'Choose how to connect', publicMissing: 'No public endpoint is configured for this service.',
@@ -39,13 +39,38 @@ const it: Partial<Record<Key, string>> = {
   search: 'Cerca applicazioni', noResults: 'Nessuna applicazione corrispondente', clearSearch: 'Cancella ricerca',
   explore: 'Scegli una demo', open: 'Apri', chat: 'Chat locale', configure: 'Configura altrove', back: 'Indietro', unavailable: 'Servizio non disponibile', notFound: 'Servizio non trovato', retry: 'Riprova', disconnected: 'Il servizio non e raggiungibile ora.', choose: 'Scegli come connetterti', publicMissing: 'Nessun endpoint pubblico configurato per questo servizio.', publicHttps: 'I client cloud richiedono un endpoint HTTPS pubblico. Gli indirizzi LAN, localhost e Docker non funzionano.', staticAuth: 'Questo servizio richiede credenziali custodite dall app. Non sono condivise con client esterni.', endpoint: 'Endpoint MCP originale', copy: 'Copia endpoint', copied: 'Copiato', docs: 'Documentazione ufficiale', other: 'Altro client', clientSteps: 'Configurazione', unsupported: 'Questa combinazione non e disponibile.', login: 'Accedi', logout: 'Esci', sessionExpired: 'Sessione scaduta. Accedi di nuovo.', history: 'Conversazioni', newChat: 'Nuova conversazione', delete: 'Elimina conversazione', confirmDelete: 'Eliminare questa conversazione?', noHistory: 'Nessuna conversazione', message: 'Messaggio', send: 'Invia', cancel: 'Interrompi', upload: 'Allega immagine', remove: 'Rimuovi immagine', imageUnsupported: 'Le immagini non sono supportate dal modello attuale.', imageUnknown: 'Le immagini non sono verificate per il modello attuale.', imageLarge: 'Immagini fino a 5 MB.', imageType: 'Usa PNG, JPEG, WebP o GIF.', imageUnavailable: 'Immagine non disponibile', reasoning: 'Ragionamento', reasoningUnavailable: 'Nessun ragionamento fornito per questa risposta.', tools: 'Attivita strumenti', arguments: 'Argomenti', result: 'Risultato', approval: 'Approvazione richiesta', approve: 'Approva', deny: 'Rifiuta', truncated: 'Risultato troncato', failed: 'Errore', cancelled: 'Annullato', loading: 'Caricamento', empty: 'Fai una domanda.', network: 'Connessione interrotta. Nuovo tentativo...', llmMissing: 'Il modello linguistico non e ancora configurato.', theme: 'Cambia tema', language: 'Lingua', menu: 'Mostra conversazioni', error: 'Si e verificato un errore', signInAgain: 'Accedi di nuovo', localOnly: 'Solo la chat locale puo usare credenziali del server.', streamRestored: 'Connessione ripristinata', pending: 'In attesa', approved: 'Approvato', denied: 'Rifiutato', running: 'In corso', succeeded: 'Riuscito'
 };
-export type Locale = 'en' | 'de' | 'fr' | 'it';
-export const locales: Locale[] = ['en', 'de', 'fr', 'it'];
-export function initialLocale(): Locale { const stored = localStorage.getItem('sd.locale') || navigator.language.slice(0, 2); return locales.includes(stored as Locale) ? stored as Locale : 'en'; }
+const es: Record<Key, string> = {
+  search: 'Buscar aplicaciones', noResults: 'No hay aplicaciones que coincidan', clearSearch: 'Borrar búsqueda',
+  explore: 'Explorar con IA', open: 'Abrir',
+  chat: 'Chat local', configure: 'Configurar otros chatbots', back: 'Volver', unavailable: 'Servicio no disponible', notFound: 'Servicio no encontrado', retry: 'Reintentar',
+  collapseSidebar: 'Contraer la barra lateral', expandSidebar: 'Expandir la barra lateral',
+  disconnected: 'Este servicio no está accesible en este momento.', choose: 'Elige cómo conectarte', publicMissing: 'No hay ningún punto de acceso público configurado para este servicio.',
+  publicHttps: 'Los clientes en la nube necesitan un punto de acceso HTTPS público al que puedan llegar sus servidores. Una dirección de red local, localhost o Docker no funcionará.',
+  staticAuth: 'Este servicio requiere credenciales que guarda esta aplicación y que no se comparten con clientes externos. Configura tu propio acceso con el operador del servidor.',
+  endpoint: 'Punto de acceso MCP de origen', copy: 'Copiar punto de acceso', copied: 'Copiado', docs: 'Documentación oficial', other: 'Otro cliente',
+  clientSteps: 'Configuración del cliente', unsupported: 'Esta combinación no está disponible con el punto de acceso actual.',
+  login: 'Iniciar sesión', logout: 'Cerrar sesión', sessionExpired: 'La sesión ha caducado. Inicia sesión de nuevo.', history: 'Conversaciones', newChat: 'Nueva conversación',
+  delete: 'Eliminar conversación', confirmDelete: '¿Eliminar esta conversación?', noHistory: 'Aún no hay conversaciones',
+  message: 'Mensaje', send: 'Enviar', cancel: 'Cancelar la respuesta', upload: 'Añadir imagen', remove: 'Quitar imagen',
+  record: 'Grabar mensaje de voz', stopRecording: 'Detener grabación', recording: 'Grabando...', removeAudio: 'Quitar grabación',
+  micDenied: 'Se ha denegado el acceso al micrófono o no está disponible.', audioFailed: 'No se ha podido procesar la grabación.',
+  audioLong: 'Las grabaciones deben pesar 5 MB o menos.', audioUnavailable: 'Audio no disponible',
+  imageUnsupported: 'El modelo actual no admite imágenes.', imageUnknown: 'No se ha verificado que el modelo actual admita imágenes.',
+  imageLarge: 'Las imágenes deben pesar 5 MB o menos.', imageType: 'Usa PNG, JPEG, WebP o GIF.', imageUnavailable: 'Imagen no disponible',
+  reasoning: 'Razonamiento', reasoningUnavailable: 'No se ha proporcionado el razonamiento de esta respuesta.', tools: 'Actividad de herramientas',
+  arguments: 'Argumentos', result: 'Resultado', approval: 'Se requiere aprobación', approve: 'Aprobar', deny: 'Denegar',
+  truncated: 'Resultado truncado', failed: 'Error', cancelled: 'Cancelado', loading: 'Cargando', empty: 'Haz una pregunta para empezar.',
+  network: 'Conexión interrumpida. Reintentando...', llmMissing: 'El modelo de lenguaje aún no está configurado.', theme: 'Cambiar el tema de color', language: 'Idioma', menu: 'Mostrar u ocultar la lista de conversaciones',
+  error: 'Algo ha ido mal', signInAgain: 'Inicia sesión de nuevo', localOnly: 'El chat local puede usar credenciales guardadas en el servidor; los clientes externos, no.',
+  streamRestored: 'Conexión restablecida', pending: 'Pendiente', approved: 'Aprobado', denied: 'Denegado', running: 'En curso', succeeded: 'Completado'
+};
+export type Locale = 'es' | 'en' | 'de' | 'fr' | 'it';
+export const locales: Locale[] = ['es', 'en', 'de', 'fr', 'it'];
+export function initialLocale(): Locale { const stored = localStorage.getItem('sd.locale'); return locales.includes(stored as Locale) ? stored as Locale : 'es'; }
 export function translate(locale: Locale, key: Key) {
-  if (key === 'explore') return { en: 'Explore with Apertus', de: 'Mit Apertus entdecken', fr: 'Explorer avec Apertus', it: 'Esplora con Apertus' }[locale];
-  if (key === 'configure') return { en: en.configure, de: 'Andere Chatbots konfigurieren', fr: 'Configurer d autres chatbots', it: 'Configura altri chatbot' }[locale];
-  if (key === 'collapseSidebar') return { en: en.collapseSidebar, de: 'Seitenleiste einklappen', fr: 'Replier la barre laterale', it: 'Comprimi barra laterale' }[locale];
-  if (key === 'expandSidebar') return { en: en.expandSidebar, de: 'Seitenleiste ausklappen', fr: 'Deplier la barre laterale', it: 'Espandi barra laterale' }[locale];
-  return ({ en, de, fr, it }[locale][key] || en[key]);
+  if (key === 'explore') return { en: 'Explore with AI', de: 'Mit KI entdecken', fr: "Explorer avec l'IA", it: "Esplora con l'IA", es: 'Explorar con IA' }[locale];
+  if (key === 'configure') return { en: en.configure, de: 'Andere Chatbots konfigurieren', fr: 'Configurer d autres chatbots', it: 'Configura altri chatbot', es: es.configure }[locale];
+  if (key === 'collapseSidebar') return { en: en.collapseSidebar, de: 'Seitenleiste einklappen', fr: 'Replier la barre laterale', it: 'Comprimi barra laterale', es: es.collapseSidebar }[locale];
+  if (key === 'expandSidebar') return { en: en.expandSidebar, de: 'Seitenleiste ausklappen', fr: 'Deplier la barre laterale', it: 'Espandi barra laterale', es: es.expandSidebar }[locale];
+  return ({ es, en, de, fr, it }[locale][key] || en[key]);
 }

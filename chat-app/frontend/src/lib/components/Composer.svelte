@@ -93,9 +93,9 @@
 
 <style>
   .message-input { display: flex; align-items: flex-end; gap: 4px; padding: 8px; border: 1px solid #c6c2bb; border-radius: 14px; transition: border-color .15s; }
-  .message-input:focus-within { border-color: #be272b; }
+  .message-input:focus-within { border-color: #0071CE; }
   :global(html[data-theme='dark']) .message-input { border-color: #45413d; }
-  :global(html[data-theme='dark']) .message-input:focus-within { border-color: #be272b; }
+  :global(html[data-theme='dark']) .message-input:focus-within { border-color: #0071CE; }
   .message-input textarea { flex: 1; display: block; min-height: 0; max-height: min(45vh, 360px); margin: 0; padding: 7px 4px; border: 0; border-radius: 0; resize: none; overflow-y: auto; line-height: 1.5; outline: none; }
   .message-input textarea.padded { padding-left: 8px; }
   .send-button, .side-button { flex: none; width: 34px; height: 34px; padding: 7px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }

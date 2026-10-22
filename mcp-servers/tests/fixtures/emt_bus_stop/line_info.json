@@ -1,0 +1,19 @@
+{
+  "code": "00",
+  "description": "Data recovered OK",
+  "datetime": "2026-10-22T10:15:00.000000",
+  "data": [
+    {
+      "line": "005",
+      "label": "5",
+      "nameA": "Puerta del Sol/Sevilla",
+      "nameB": "Estación de Chamartín",
+      "dateRef": "20261022",
+      "timeTable": [
+        {"idDayType": "LABORABLE", "Direction1": {"StartTime": "06:00", "StopTime": "23:30", "MinimunFrequency": "6", "MaximumFrequency": "12", "FrequencyText": "6 a 12 minutos"}, "Direction2": {"StartTime": "06:00", "StopTime": "23:30", "MinimunFrequency": "6", "MaximumFrequency": "12", "FrequencyText": "6 a 12 minutos"}},
+        {"idDayType": "SABADO", "Direction1": {"StartTime": "06:30", "StopTime": "23:30", "MinimunFrequency": "8", "MaximumFrequency": "14", "FrequencyText": "8 a 14 minutos"}, "Direction2": {"StartTime": "06:30", "StopTime": "23:30", "MinimunFrequency": "8", "MaximumFrequency": "14", "FrequencyText": "8 a 14 minutos"}},
+        {"idDayType": "FESTIVO", "Direction1": {"StartTime": "07:00", "StopTime": "23:30", "MinimunFrequency": "10", "MaximumFrequency": "15", "FrequencyText": "10 a 15 minutos"}, "Direction2": {"StartTime": "07:00", "StopTime": "23:30", "MinimunFrequency": "10", "MaximumFrequency": "15", "FrequencyText": "10 a 15 minutos"}}
+      ]
+    }
+  ]
+}

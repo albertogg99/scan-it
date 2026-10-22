@@ -29,12 +29,12 @@
       {:else if message.parts?.length}
         {#each groupParts(message.parts) as part}
           {#if part.type === 'text'}<Markdown text={part.text} />
-          {:else if part.type === 'reasoning'}<details class="reasoning"><summary>{t('reasoning')}</summary><Markdown text={part.text} /></details>
+          {:else if part.type === 'reasoning'}{@render reasoning(part.text)}
           {:else}{@const call = message.tool_calls.find(item => item.id === part.tool_call_id)}{#if call}{@render tool(call)}{/if}{/if}
         {/each}
       {:else}
         {#if message.content}<Markdown text={message.content} />{/if}
-        {#if message.reasoning}<details class="reasoning"><summary>{t('reasoning')}</summary><Markdown text={message.reasoning} /></details>{/if}
+        {#if message.reasoning}{@render reasoning(message.reasoning)}{/if}
         {#each message.tool_calls as call}{@render tool(call)}{/each}
       {/if}
       {#each message.attachments as attachment}<ImageAttachment id={attachment.id} mime={attachment.mime} />{/each}
@@ -43,6 +43,12 @@
   {/each}
   </div>
 </div>
+{#snippet reasoning(text: string)}
+  <details class="reasoning tool-disclosure">
+    <summary><span class="tool-chevron"><ChevronRight size={14} /></span><span>{t('reasoning')}</span></summary>
+    <Markdown {text} />
+  </details>
+{/snippet}
 {#snippet tool(call: ToolCall)}
   <section class="tool-call">
     <details class="tool-disclosure">
@@ -68,7 +74,7 @@
   .tool-disclosure summary { display: flex; align-items: center; gap: 7px; list-style: none; width: fit-content; max-width: 100%; padding: 4px 0; }
   .tool-disclosure summary::-webkit-details-marker { display: none; }
   .tool-chevron { display: inline-flex; flex: 0 0 auto; transition: transform 180ms ease; }
-  .tool-disclosure[open] .tool-chevron { transform: rotate(90deg); }
+  .tool-disclosure[open] > summary .tool-chevron { transform: rotate(90deg); }
   .tool-content { padding: 8px 0 4px 21px; }
   .tool-content h3 { font-size: .78rem; font-weight: 500; margin: 14px 0 4px; }
   .tool-status { font-size: .75rem; color: #888178; }

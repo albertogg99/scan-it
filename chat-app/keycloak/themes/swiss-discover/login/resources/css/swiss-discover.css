@@ -1,17 +1,22 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap");
 :root {
   color-scheme: light;
-  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  font-family: "Lato", Verdana, sans-serif;
   --sd-ink: #1e2623;
   --sd-paper: #f7f7f4;
   --sd-line: #c8cfcb;
-  --sd-red: #b8202d;
+  --sd-red: #0071CE;
+  --sd-red-hover: #005BA6;
+  --sd-red-active: #004A8A;
+  --sd-navy: #0033A0;
+  --sd-link: #005BA6;
 }
 
 body, .login-pf body {
   min-height: 100vh;
   background: var(--sd-paper);
   color: var(--sd-ink);
-  font-family: "Helvetica Neue", Helvetica, sans-serif;
+  font-family: "Lato", Verdana, sans-serif;
 }
 
 .login-pf-page, #kc-container {
@@ -61,6 +66,7 @@ body, .login-pf body {
   margin: 0 0 22px;
 }
 
+.sd-logo { display: block; height: 56px; width: auto; margin: 0 0 12px; }
 .sd-brand { display: block; font-size: 18px; }
 .sd-header-note { display: block; color: #52605a; font-weight: 400; }
 .sd-intro { margin: 0 0 24px; color: #52605a; font-size: 14px; line-height: 1.5; }
@@ -95,11 +101,12 @@ input:focus-visible, button:focus-visible, a:focus-visible {
   font-weight: 600;
   cursor: pointer;
 }
-.sd-submit:hover, #kc-form-buttons input[type="submit"]:hover { background: #901824; }
+.sd-submit:hover, #kc-form-buttons input[type="submit"]:hover { background: var(--sd-red-hover); }
+.sd-submit:active, #kc-form-buttons input[type="submit"]:active { background: var(--sd-red-active); }
 .sd-register { border-top: 1px solid var(--sd-line); padding-top: 20px; margin-top: 24px; font-size: 13px; }
 .sd-notice { color: #52605a; font-size: 12px; line-height: 1.5; margin: 18px 0 0; }
-.sd-error, .pf-c-form__helper-text.pf-m-error { color: #9d1c28; display: block; font-size: 12px; margin-top: 6px; }
-a { color: #9d1c28; text-decoration: underline; text-underline-offset: 2px; }
+.sd-error, .pf-c-form__helper-text.pf-m-error { color: #b3261e; display: block; font-size: 12px; margin-top: 6px; }
+a { color: var(--sd-link); text-decoration: underline; text-underline-offset: 2px; }
 
 @media (max-width: 480px) {
   .login-pf-page { justify-content: flex-start; padding: 24px 16px; }
@@ -107,9 +114,12 @@ a { color: #9d1c28; text-decoration: underline; text-underline-offset: 2px; }
 }
 
 @media (prefers-color-scheme: dark) {
-  :root { color-scheme: dark; --sd-ink: #f2f5f2; --sd-paper: #171d1b; --sd-line: #51605a; }
+  :root { color-scheme: dark; --sd-red-hover: #005BA6; --sd-ink: #f2f5f2; --sd-paper: #171d1b; --sd-line: #51605a; }
   .card-pf { background: #252d29; }
   .sd-field input, .form-control, .pf-c-form-control { background: #171d1b; }
   .sd-intro, .sd-notice, .sd-header-note { color: #bdc9c2; }
-  a { color: #ff949e; }
+  a { color: #4DA3FF; }
+  input:focus-visible, button:focus-visible, a:focus-visible { outline-color: #4DA3FF; }
+  .card-pf { border-top-color: #4DA3FF; }
+  .sd-error, .pf-c-form__helper-text.pf-m-error { color: #ff9a92; }
 }

@@ -1,0 +1,25 @@
+{
+  "code": "00",
+  "description": "Data recovered OK (lapsed: 12 millsecs)",
+  "datetime": "2026-10-22T10:15:00.000000",
+  "data": [
+    {
+      "stops": [
+        {
+          "stop": "72",
+          "name": "Cibeles - Casa de América",
+          "postalAddress": "Paseo de Recoletos, 2",
+          "geometry": {"type": "Point", "coordinates": [-3.69214, 40.42031]},
+          "pmv": "72",
+          "dataLine": [
+            {"line": "005", "label": "5", "headerA": "Chamartín", "headerB": "Puerta del Sol", "direction": "A", "startTime": "06:00", "stopTime": "23:30", "minFreq": 6, "maxFreq": 12, "dayType": "LA"},
+            {"line": "027", "label": "27", "headerA": "Plaza Castilla", "headerB": "Embajadores", "direction": "A", "startTime": "06:00", "stopTime": "23:30", "minFreq": 5, "maxFreq": 10, "dayType": "LA"},
+            {"line": "053", "label": "53", "headerA": "Arturo Soria", "headerB": "Puerta del Sol", "direction": "A", "startTime": "06:00", "stopTime": "23:30", "minFreq": 7, "maxFreq": 12, "dayType": "LA"},
+            {"line": "363", "label": "C03", "headerA": "Argüelles", "headerB": "Puerta de Toledo", "direction": "A", "startTime": "07:00", "stopTime": "22:00", "minFreq": 10, "maxFreq": 15, "dayType": "LA"},
+            {"line": "501", "label": "N1", "headerA": "Sanchinarro", "headerB": "Cibeles", "direction": "A", "startTime": "23:35", "stopTime": "05:55", "minFreq": 15, "maxFreq": 35, "dayType": "LA"}
+          ]
+        }
+      ]
+    }
+  ]
+}

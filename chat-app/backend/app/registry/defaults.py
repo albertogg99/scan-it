@@ -5,9 +5,9 @@ from app.persistence.models import MCPServer
 
 # Hostnames resolve on the shared compose network of the root docker-compose.yml.
 DEFAULT_SERVERS = (
-    ("zurich-hackathon", "Zurich Hackathon 2026", "Offline handbook, schedule and challenge briefs for Zurich Hackathon 2026.", "http://zurich-hackathon:8555/mcp"),
-    ("basel-parking", "Basel Parking", "Reported parking availability in Basel from the official Basel-Stadt open dataset.", "http://basel-parking:8555/mcp"),
-    ("public-transport", "Kraftwerk Public Transport", "Departures and journeys from Zurich Selnau station via the Swiss Open Journey Planner.", "http://public-transport:8555/mcp"),
+    ("emt-bus-stop", "Parada 72 · Cibeles", "Llegadas en tiempo real, líneas, horarios y avisos de la parada EMT 72 Cibeles - Casa de América (EMT Madrid MobilityLabs).", "http://emt-bus-stop:8555/mcp"),
+    ("emt-tickets", "Billetes EMT (demo)", "Compra simulada de billetes EMT y reserva de plaza en el Exprés Aeropuerto. Demo: sin pagos ni billetes reales.", "http://emt-tickets:8555/mcp"),
+    ("bicimad", "BiciMAD", "Bicis y anclajes libres en cualquier estación de BiciMAD y tarifas vigentes (GBFS público de BiciMAD).", "http://bicimad:8555/mcp"),
 )
 
 

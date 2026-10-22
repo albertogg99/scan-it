@@ -1,0 +1,39 @@
+bicimad:
+  gbfs_base_url: https://madrid.publicbikesystem.net/customer/gbfs/v2
+  language: es
+  timeout_seconds: 15
+  cache_ttl_seconds: 30
+  stale_after_seconds: 300
+  station_stale_after_seconds: 1800
+  default_radius_m: 500
+  max_radius_m: 3000
+  max_results: 10
+  source_url: https://www.bicimad.com/
+  data_source_url: https://madrid.publicbikesystem.net/customer/gbfs/v2/gbfs.json
+  attribution: "Datos: BiciMAD (EMT Madrid), GBFS"
+  prices:
+    currency: EUR
+    plans:
+      - id: pay_per_use
+        name: Uso ocasional
+        price_eur: null
+        rules:
+          - {period: primeros 30 min, price_eur: 0.50}
+          - {period: segundos 30 min, price_eur: 0.50}
+          - {period: cada 30 min adicionales, price_eur: 3.00}
+        source_url: https://www.bicimad.com/bicimad
+      - id: flat_rate_30_days
+        name: Tarifa plana 30 días
+        price_eur: 10.00
+        billing_period: 30 días
+        rules:
+          - {period: viajes de hasta 30 min, price_eur: 0.00, note: ilimitados}
+          - {period: siguientes 30 min, price_eur: 0.50}
+          - {period: cada 30 min adicionales, price_eur: 3.00}
+        source_url: https://www.bicimad.com/bicimad
+      - id: bicibus_emt
+        name: BicibusEMT
+        price_eur: 1.80
+        rules:
+          - {period: billete combinado, price_eur: 1.80, note: "90 min de transbordos en bus, incluye trayectos BiciMAD de hasta 30 min"}
+        source_url: https://www.emtmadrid.es/ViajarenBus/Titulosytarifas

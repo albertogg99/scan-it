@@ -1,0 +1,41 @@
+{
+  "code": "00",
+  "description": "Data recovered OK (lapsed: 80 millsecs)",
+  "datetime": "2026-10-22T10:15:00.000000",
+  "data": [
+    {
+      "Arrive": [
+        {"line": "27", "stop": "72", "isHead": "False", "destination": "PLAZA CASTILLA", "deviation": 0, "bus": 4321, "geometry": {"type": "Point", "coordinates": [-3.6930, 40.4200]}, "estimateArrive": 600, "DistanceBus": 2100, "positionTypeBus": "0"},
+        {"line": "5", "stop": "72", "isHead": "False", "destination": "CHAMARTIN", "deviation": 0, "bus": 1234, "geometry": {"type": "Point", "coordinates": [-3.6950, 40.4190]}, "estimateArrive": 150, "DistanceBus": 420, "positionTypeBus": "0"},
+        {"line": "53", "stop": "72", "isHead": "False", "destination": "ARTURO SORIA", "deviation": 0, "bus": 5678, "geometry": {"type": "Point", "coordinates": [-3.7000, 40.4150]}, "estimateArrive": 999999, "DistanceBus": 9800, "positionTypeBus": "0"},
+        {"line": "5", "stop": "72", "isHead": "False", "destination": "CHAMARTIN", "deviation": 0, "bus": 1235, "geometry": {"type": "Point", "coordinates": [-3.6990, 40.4170]}, "estimateArrive": 85, "DistanceBus": 300, "positionTypeBus": "0"}
+      ],
+      "StopInfo": [
+        {
+          "stopId": "72",
+          "stopName": "Cibeles - Casa de América",
+          "Direction": "Paseo de Recoletos, 2",
+          "lines": [
+            {"label": "5", "line": "005", "nameA": "Puerta del Sol/Sevilla", "nameB": "Estación de Chamartín", "to": "Chamartín"},
+            {"label": "27", "line": "027", "nameA": "Glorieta de Embajadores", "nameB": "Plaza de Castilla", "to": "Plaza de Castilla"}
+          ]
+        }
+      ],
+      "Incident": {
+        "ListaIncident": {
+          "data": [
+            {
+              "title": "Desvío por obras en Paseo de Recoletos",
+              "description": "<p>Por obras, las líneas <b>5</b> y <b>27</b> no darán servicio en el tramo&nbsp;Recoletos.</p><script>alert('x')</script><p>Consulte más información.</p>",
+              "rssFrom": "2026-10-20T00:00:00",
+              "rssTo": "2026-11-30T23:59:00",
+              "cause": "CONSTRUCTION",
+              "effect": "DETOUR",
+              "moreInfo": {"@url": "https://www.emtmadrid.es/Home"}
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -21,44 +21,36 @@ x-dynamic-mcp: &dynamic-mcp
     start_period: 60s
 
 services:
-  zurich-hackathon:
+  emt-bus-stop:
     <<: *dynamic-mcp
     ports:
-      - "${HACKATHON_PORT:-8555}:8555"
+      - "${EMT_BUS_STOP_PORT:-8561}:8555"
     environment:
       <<: *mcp-environment
-      MCP_SERVER_NAME: "Zurich Hackathon 2026"
+      MCP_SERVER_NAME: "EMT Madrid Parada 72 Cibeles"
+      EMT_CLIENT_ID: "${EMT_CLIENT_ID:-}"
+      EMT_PASSKEY: "${EMT_PASSKEY:-}"
+      EMT_EMAIL: "${EMT_EMAIL:-}"
+      EMT_PASSWORD: "${EMT_PASSWORD:-}"
     volumes:
-      - ./servers/zurich-hackathon:/app/server:ro
+      - ./servers/emt-bus-stop:/app/server:ro
 
-  basel-parking:
+  emt-tickets:
     <<: *dynamic-mcp
     ports:
-      - "${BASEL_PARKING_PORT:-8559}:8555"
+      - "${EMT_TICKETS_PORT:-8562}:8555"
     environment:
       <<: *mcp-environment
-      MCP_SERVER_NAME: "Basel Parking"
+      MCP_SERVER_NAME: "EMT Madrid Billetes (demo)"
     volumes:
-      - ./servers/basel-parking:/app/server:ro
+      - ./servers/emt-tickets:/app/server:ro
 
-  public-transport:
+  bicimad:
     <<: *dynamic-mcp
     ports:
-      - "${PUBLIC_TRANSPORT_PORT:-8560}:8555"
+      - "${BICIMAD_PORT:-8563}:8555"
     environment:
       <<: *mcp-environment
-      MCP_SERVER_NAME: "Kraftwerk Public Transport"
-      OJP_API_TOKEN: "${OJP_API_TOKEN:-}"
+      MCP_SERVER_NAME: "BiciMAD"
     volumes:
-      - ./servers/public-transport:/app/server:ro
-
-  text-demo:
-    <<: *dynamic-mcp
-    profiles: [examples]
-    ports:
-      - "${TEXT_DEMO_PORT:-8556}:8555"
-    environment:
-      <<: *mcp-environment
-      MCP_SERVER_NAME: "Text Tools Demo"
-    volumes:
-      - ./servers/text-demo:/app/server:ro
+      - ./servers/bicimad:/app/server:ro

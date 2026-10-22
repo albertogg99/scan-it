@@ -1,0 +1,16 @@
+emt_bus_stop:
+  base_url: https://openapi.emtmadrid.es
+  timeout_seconds: 15
+  arrivals_cache_ttl_seconds: 20
+  static_cache_ttl_seconds: 3600
+  requests_per_minute: 60
+  culture: ES
+  timezone: Europe/Madrid
+  source_url: https://apidocs.emtmadrid.es/
+  attribution: "Datos: EMT Madrid MobilityLabs"
+  stop:
+    id: "72"
+    name: "Cibeles - Casa de Am\u00e9rica"
+    latitude: 40.42031
+    longitude: -3.69214
+    source_url: "https://www.emtmadrid.es/aplicaciones/Estimaciones.aspx?idStop=72&Estado=1&panel=6"
