@@ -30,6 +30,12 @@ class Settings(BaseSettings):
     mcp_connect_timeout_s: int = 8
     tool_output_warn_chars: int = 20000
     llm_timeout_s: int = 120
+    # Qwen3.6 thinking-mode recommendations; presence_penalty curbs endless reasoning loops.
+    llm_temperature: float = 1.0
+    llm_top_p: float = 0.95
+    llm_top_k: int = 20
+    llm_presence_penalty: float = 1.5
+    llm_max_tokens: int = 32768
     max_response_chars: int = 40000
     approval_timeout_s: int = 600
     max_upload_bytes: int = 5242880

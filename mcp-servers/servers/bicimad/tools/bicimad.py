@@ -25,6 +25,9 @@ if not logger.handlers:
 DEFAULT_BASE_URL = "https://madrid.publicbikesystem.net/customer/gbfs/v2"
 DISCOVERY_URL = f"{DEFAULT_BASE_URL}/gbfs.json"
 SOURCE_URL = "https://www.bicimad.com/"
+DEFAULT_GEOCODER_URL = "https://nominatim.openstreetmap.org/search"
+GEOCODER_ATTRIBUTION = "Geocoding: © OpenStreetMap contributors (https://www.openstreetmap.org/copyright), Nominatim"
+GEOCODER_CACHE_SIZE = 256
 ATTRIBUTION = "Datos: BiciMAD (EMT Madrid), GBFS"
 FEEDS = ("station_information", "station_status", "vehicle_types")
 MADRID_TZ = ZoneInfo("Europe/Madrid")
@@ -266,6 +269,79 @@ class BicimadClient:
             return {**deepcopy(snapshot), "cached": False}
 
 
+class GeocoderClient:
+    def __init__(self, config: dict):
+        self.url = str(config.get("geocoder_url", DEFAULT_GEOCODER_URL))
+        if not self.url.startswith("https://"):
+            raise ValueError("geocoder_url must use https")
+        self.user_agent = str(config.get("geocoder_user_agent", "DynamicMCP-BiciMAD/1.0"))
+        self.timeout = float(config.get("timeout_seconds", 15))
+        self.cache_ttl = float(config.get("geocoder_cache_ttl_seconds", 3600))
+        if not math.isfinite(self.cache_ttl) or self.cache_ttl < 0:
+            raise ValueError("geocoder_cache_ttl_seconds must be nonnegative and finite")
+        self.cache: dict[tuple[str, int], tuple[float, list]] = {}
+        self.lock = Lock()
+        self.last_call = 0.0
+
+    def search(self, query: str, limit: int) -> tuple[list, bool]:
+        key = (fold(query), limit)
+        with self.lock:
+            hit = self.cache.get(key)
+            if hit is not None and time.monotonic() < hit[0]:
+                return deepcopy(hit[1]), True
+            # Nominatim usage policy: at most one request per second.
+            wait = 1.0 - (time.monotonic() - self.last_call)
+            if wait > 0:
+                time.sleep(wait)
+            try:
+                response = httpx.get(
+                    self.url,
+                    params={
+                        "q": query, "format": "jsonv2", "limit": limit, "countrycodes": "es",
+                        "viewbox": f"{LON_RANGE[0]},{LAT_RANGE[1]},{LON_RANGE[1]},{LAT_RANGE[0]}",
+                        "bounded": 1, "accept-language": "es",
+                    },
+                    timeout=self.timeout,
+                    follow_redirects=False,
+                    headers={"User-Agent": self.user_agent, "Accept": "application/json"},
+                )
+            finally:
+                self.last_call = time.monotonic()
+            response.raise_for_status()
+            try:
+                payload = response.json()
+            except ValueError as error:
+                raise ValueError("The geocoder returned invalid JSON") from error
+            if not isinstance(payload, list):
+                raise ValueError("The geocoder response was not a list")
+            if len(self.cache) >= GEOCODER_CACHE_SIZE:
+                self.cache.clear()
+            self.cache[key] = (time.monotonic() + self.cache_ttl, payload)
+            return deepcopy(payload), False
+
+
+def normalize_place(item: object) -> dict | None:
+    if not isinstance(item, dict):
+        return None
+    try:
+        lat, lon = float(item.get("lat")), float(item.get("lon"))
+    except (TypeError, ValueError):
+        return None
+    if not (is_number(lat) and is_number(lon) and LAT_RANGE[0] <= lat <= LAT_RANGE[1]
+            and LON_RANGE[0] <= lon <= LON_RANGE[1]):
+        return None
+    importance = item.get("importance")
+    return {
+        "name": item.get("name") or None,
+        "display_name": str(item.get("display_name") or ""),
+        "category": item.get("category"),
+        "type": item.get("type"),
+        "latitude": lat,
+        "longitude": lon,
+        "importance": importance if is_number(importance) else None,
+    }
+
+
 def check_prices_config(prices: object) -> dict:
     if not isinstance(prices, dict) or not isinstance(prices.get("plans"), list):
         raise ValueError("prices must be a mapping with a plans list")
@@ -274,6 +350,7 @@ def check_prices_config(prices: object) -> dict:
 
 def register(mcp, config: dict):
     client = BicimadClient(config)
+    geocoder = GeocoderClient(config)
     stale_after = float(config.get("stale_after_seconds", 300))
     station_stale_after = float(config.get("station_stale_after_seconds", 1800))
     default_radius = int(config.get("default_radius_m", 500))
@@ -490,6 +567,51 @@ def register(mcp, config: dict):
             "reason": reason,
             "message": message,
             "warnings": warnings,
+        }
+
+    @mcp.tool(
+        name="search_places",
+        description=(
+            "Resolve a Madrid place, landmark or address (e.g. 'Plaza de España', 'Hospital La Paz', "
+            "'Calle Alcalá 50') to candidate latitude/longitude pairs via OpenStreetMap Nominatim, "
+            "restricted to the Madrid area. Use the result as input to find_bike_stations_near. If "
+            "'ambiguous' is true, ask the user which candidate they mean before continuing."
+        ),
+        annotations=TOOL_ANNOTATIONS["open"],
+    )
+    def search_places(query: str, limit: int = 5) -> dict:
+        text = str(query).strip()
+        if not text:
+            raise ToolError("query must not be empty; use a place name or address in Madrid.")
+        if type(limit) is not int or not 1 <= limit <= max_results:
+            raise ToolError(f"limit must be an integer between 1 and {max_results}.")
+        try:
+            raw, cached = geocoder.search(text, limit)
+        except httpx.HTTPStatusError as error:
+            logger.error("Geocoder HTTP error: %s", error.response.status_code)
+            raise ToolError(f"The geocoder returned HTTP {error.response.status_code}; the place is unresolved, not nonexistent.") from None
+        except httpx.HTTPError as error:
+            logger.error("Geocoder network error: %s", type(error).__name__)
+            raise ToolError("The geocoder could not be reached; the place is unresolved, not nonexistent.") from None
+        except ValueError as error:
+            logger.error("Geocoder invalid data: %s", error)
+            raise ToolError(f"The geocoder returned unusable data ({error}); the place is unresolved.") from None
+        places = [place for place in map(normalize_place, raw) if place is not None]
+        if not places:
+            message = "No matching place found in the Madrid area; ask the user for a more specific place or address."
+        elif len(places) > 1:
+            message = "Several candidates found; ask the user which one they mean unless one is clearly intended."
+        else:
+            message = None
+        return {
+            "query": text,
+            "places": places,
+            "ambiguous": len(places) > 1,
+            "message": message,
+            "cached": cached,
+            "retrieved_at": utc_now().isoformat(),
+            "attribution": GEOCODER_ATTRIBUTION,
+            "warnings": ["Coordinates are geocoder estimates for the place, not verified entrances."],
         }
 
     @mcp.tool(

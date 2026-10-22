@@ -26,7 +26,7 @@ SOL = (40.4169, -3.7035)
 CIBELES = (40.42031, -3.69214)
 TOOLS = {
     "search_bike_stations", "find_bike_stations_near", "get_bike_station",
-    "get_bicimad_summary", "get_bicimad_prices",
+    "get_bicimad_summary", "get_bicimad_prices", "search_places",
 }
 
 
@@ -73,8 +73,40 @@ class BicimadTestCase(unittest.TestCase):
         return [s["station_id"] for s in result["stations"]], result
 
 
+class SearchPlacesTests(BicimadTestCase):
+    def geocode(self, payload):
+        response = lambda url, **_: httpx.Response(200, json=payload, request=httpx.Request("GET", url))
+        return patch.object(bicimad.httpx, "get", side_effect=response)
+
+    def test_returns_candidates_inside_madrid_and_flags_ambiguity(self):
+        payload = [
+            {"lat": "40.4237", "lon": "-3.7122", "display_name": "Plaza de España, Madrid", "importance": 0.6},
+            {"lat": "40.4200", "lon": "-3.7000", "display_name": "Plaza de España, Centro"},
+            {"lat": "41.65", "lon": "-0.88", "display_name": "Plaza de España, Zaragoza"},
+            {"lat": "bad", "lon": "x"},
+        ]
+        with self.geocode(payload):
+            result = self.tools["search_places"]("Plaza de España")
+        self.assertEqual(len(result["places"]), 2)
+        self.assertTrue(result["ambiguous"])
+        self.assertEqual(result["places"][0]["latitude"], 40.4237)
+
+    def test_no_results_and_network_error(self):
+        with self.geocode([]):
+            result = self.tools["search_places"]("nowhere at all")
+        self.assertEqual(result["places"], [])
+        self.assertFalse(result["ambiguous"])
+        with patch.object(bicimad.httpx, "get", side_effect=httpx.ConnectError("offline")):
+            with self.assertRaises(bicimad.ToolError):
+                self.tools["search_places"]("Retiro")
+
+    def test_rejects_empty_query(self):
+        with self.assertRaises(bicimad.ToolError):
+            self.tools["search_places"]("  ")
+
+
 class RegistrationTests(BicimadTestCase):
-    def test_five_tools_with_explicit_annotations(self):
+    def test_six_tools_with_explicit_annotations(self):
         self.assertEqual(set(self.tools), TOOLS)
         for name, options in self.mcp.options.items():
             annotations = options["annotations"]

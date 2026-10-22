@@ -8,6 +8,9 @@ bicimad:
   default_radius_m: 500
   max_radius_m: 3000
   max_results: 10
+  geocoder_url: https://nominatim.openstreetmap.org/search
+  geocoder_user_agent: DynamicMCP-BiciMAD/1.0
+  geocoder_cache_ttl_seconds: 3600
   source_url: https://www.bicimad.com/
   data_source_url: https://madrid.publicbikesystem.net/customer/gbfs/v2/gbfs.json
   attribution: "Datos: BiciMAD (EMT Madrid), GBFS"
