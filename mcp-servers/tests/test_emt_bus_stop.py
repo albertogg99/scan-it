@@ -26,6 +26,7 @@ SECRETS = {
 }
 TOOLS = {
     "get_stop_info", "get_arrivals", "get_line_info", "get_line_stops", "get_line_timetable", "get_line_incidents",
+    "plan_journey", "search_connected_stops",
 }
 
 
@@ -104,7 +105,7 @@ class EmtTestCase(unittest.TestCase):
 
 
 class ConfigurationTests(EmtTestCase):
-    def test_registers_six_read_only_tools_with_explicit_annotations(self):
+    def test_registers_read_only_tools_with_explicit_annotations(self):
         registry = ToolRegistry()
         emt.register(registry, CONFIG)
         self.assertEqual(set(registry.tools), TOOLS)
@@ -223,6 +224,54 @@ class AuthenticationTests(EmtTestCase):
 
 
 class ToolBehaviourTests(EmtTestCase):
+    def connected_routes(self):
+        lists = {
+            ("005", 1): [("50", "Sol-Sevilla"), ("72", "Cibeles"), ("72", "Cibeles"), ("74", "Recoletos"),
+                         ("80", "Colón"), ("90", "Plaza Castilla")],
+            ("005", 2): [("90", "Plaza Castilla"), ("50", "Sol-Sevilla")],
+            ("027", 1): [("72", "Cibeles"), ("80", "Colón"), ("81", "Plaza de Colón"), ("90", "Plaza Castilla")],
+        }
+        for code in ("005", "027", "053", "363", "501"):
+            for direction in (1, 2):
+                stops = [{"stop": i, "name": n} for i, n in lists.get((code, direction), [])]
+                payload = {"code": "00", "data": [{"label": code.lstrip("0"), "stops": stops}]}
+                if (code, direction) == ("027", 2):
+                    payload = {"code": "90", "description": "unavailable"}
+                self.fake.routes[f"/v1/transport/busemtmad/lines/{code}/stops/{direction}/"] = (
+                    lambda payload=payload: response(payload)
+                )
+
+    def test_search_connected_stops_ranks_similar_reachable_names(self):
+        self.connected_routes()
+        result = self.client.search_connected_stops("colon")
+        self.assertEqual(result["stops"][:2], ["Colón", "Plaza de Colón"])
+        self.assertNotIn("Sol-Sevilla", self.client.search_connected_stops("sol sevilla")["stops"])
+        self.assertEqual(self.client.search_connected_stops("plaza castila")["stops"][0], "Plaza Castilla")
+        self.assertEqual(self.client.search_connected_stops("zzzz")["stops"], [])
+        self.assertTrue(any("027" in w for w in result["warnings"]))
+        for bad in ("  ", 5, "x" * 121):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                self.client.search_connected_stops(bad)
+
+    def test_journey_lists_lines_direction_and_stop_count(self):
+        self.connected_routes()
+        result = self.client.plan_journey("colón")
+        self.assertEqual(result["destination"], "Colón")
+        self.assertEqual(
+            [(o["line"], o["direction"], o["toward"], o["stops"]) for o in result["options"]],
+            [("27", 1, "Plaza Castilla", 1), ("5", 1, "Plaza Castilla", 2)],
+        )
+        self.assertTrue(self.client.plan_journey("COLON")["cached"])
+
+    def test_journey_rejects_unconnected_stop_with_suggestions(self):
+        self.connected_routes()
+        with self.assertRaisesRegex(ValueError, "not a stop reachable.*Closest connected stops: Plaza de Colón"):
+            self.client.plan_journey("Plaza Colon")
+        with self.assertRaisesRegex(ValueError, "not a stop reachable"):
+            self.client.plan_journey("Sol-Sevilla")
+        with self.assertRaises(ValueError):
+            self.client.plan_journey("")
+
     def test_stop_info_lists_lines_with_schedule(self):
         result = self.client.get_stop_info()
         self.assertEqual(result["stop"], {"id": "72", "name": "Cibeles - Casa de Am\u00e9rica"})

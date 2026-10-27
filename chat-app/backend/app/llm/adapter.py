@@ -136,12 +136,15 @@ async def stream_completion(settings, messages: list, tools: list):
     client = AsyncOpenAI(api_key=settings.api_key, base_url=settings.llm_base_url,
                          default_headers={"User-Agent": settings.llm_user_agent}, timeout=settings.llm_timeout_s)
     try:
+        extra_body = {"top_k": settings.llm_top_k}
+        if "qwen" in settings.llm_model.lower():
+            extra_body["chat_template_kwargs"] = {"enable_thinking": False}
         stream = await client.chat.completions.create(model=settings.llm_model, messages=provider_messages(settings, clean_history(messages)),
                                                        tools=tools or None, stream=True,
                                                        temperature=settings.llm_temperature, top_p=settings.llm_top_p,
                                                        presence_penalty=settings.llm_presence_penalty,
                                                        max_tokens=settings.llm_max_tokens,
-                                                       extra_body={"top_k": settings.llm_top_k})
+                                                       extra_body=extra_body)
         async for chunk in stream:
             if chunk.choices:
                 choice = chunk.choices[0]

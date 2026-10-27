@@ -7,10 +7,43 @@ import pytest
 from sqlalchemy import select
 
 from app.agent import manager
-from app.llm.adapter import OMITTED_REPLY, Normalizer, clean_history, provider_messages
+from app.llm.adapter import OMITTED_REPLY, Normalizer, clean_history, provider_messages, stream_completion
 from app.persistence.models import Conversation, MCPServer, Message, Run, ToolCall, new_id
 from app.settings import Settings, get_settings
 from app.main import app
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("model,expected", [
+    ("Qwen/Qwen3.6-35B-A3B-FP8", {"top_k": 20, "chat_template_kwargs": {"enable_thinking": False}}),
+    ("swiss-ai/apertus-v1.5-70b-thinking", {"top_k": 20}),
+])
+async def test_stream_completion_disables_qwen_thinking(monkeypatch, model, expected):
+    from app.llm import adapter
+
+    requests = []
+
+    class Client:
+        def __init__(self, **kwargs):
+            self.chat = self
+            self.completions = self
+
+        async def create(self, **kwargs):
+            requests.append(kwargs)
+
+            async def stream():
+                if False:
+                    yield None
+
+            return stream()
+
+        async def close(self):
+            pass
+
+    monkeypatch.setattr(adapter, "AsyncOpenAI", Client)
+    settings = Settings(_env_file=None, llm_api_key="test", llm_model=model)
+    assert [chunk async for chunk in stream_completion(settings, [], [])] == []
+    assert requests[0]["extra_body"] == expected
 
 
 def test_saved_parts_join_tokens_and_keep_tool_boundaries():

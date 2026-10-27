@@ -130,6 +130,14 @@ fixed in `servers/emt-bus-stop/config/tools_config.yaml`.
 | `get_line_stops(line, direction=1, limit=80)` | Ordered stops of a line, marking stop 72. |
 | `get_line_timetable(line)` | First/last service per direction and day type. |
 | `get_line_incidents(line=None)` | Current notices for one line or the whole network. |
+| `search_connected_stops(query, limit=8)` | Fuzzy name search over stops reachable from stop 72 without transfers; returns names only. |
+| `plan_journey(stop_name)` | Lines going directly to that stop: line, direction, final stop and number of stops to ride. |
+
+Connected stops come from each stop-72 line's ordered stop list
+(`lines/{line}/stops/{direction}/`): every stop after stop 72 in that
+direction is reachable. Lists are cached for an hour. EMT's `travelplan`
+endpoint is not used because it fails upstream (code 90) for every request,
+including its published example.
 
 MobilityLabs requires a free account at https://mobilitylabs.emtmadrid.es.
 Set either `EMT_CLIENT_ID` + `EMT_PASSKEY` (registered app, preferred) or

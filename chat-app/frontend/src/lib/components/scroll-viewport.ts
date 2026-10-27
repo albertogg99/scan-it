@@ -15,13 +15,25 @@ export function scrollViewport(node: HTMLElement, options: ScrollOptions = {}) {
   }
 
   function onScroll() {
-    pinned = node.scrollHeight - node.scrollTop - node.clientHeight < 64;
+    pinned = node.scrollHeight - node.scrollTop - node.clientHeight < (pinned ? 64 : 1);
     node.classList.add('is-scrolling');
     clearTimeout(idleTimer);
     idleTimer = setTimeout(() => node.classList.remove('is-scrolling'), 1000);
   }
 
+  function stopFollowing() {
+    pinned = false;
+    if (frame !== undefined) cancelAnimationFrame(frame);
+    frame = undefined;
+  }
+
+  function onWheel(event: WheelEvent) {
+    if (event.deltaY < 0) stopFollowing();
+  }
+
   node.addEventListener('scroll', onScroll, { passive: true });
+  node.addEventListener('touchmove', stopFollowing, { passive: true });
+  node.addEventListener('wheel', onWheel, { passive: true });
   const observer = options.follow ? new ResizeObserver(() => {
     if (pinned) scrollToBottom();
   }) : null;
@@ -40,6 +52,8 @@ export function scrollViewport(node: HTMLElement, options: ScrollOptions = {}) {
     destroy() {
       observer?.disconnect();
       node.removeEventListener('scroll', onScroll);
+      node.removeEventListener('touchmove', stopFollowing);
+      node.removeEventListener('wheel', onWheel);
       clearTimeout(idleTimer);
       if (frame !== undefined) cancelAnimationFrame(frame);
       node.classList.remove('quiet-scroll', 'is-scrolling');

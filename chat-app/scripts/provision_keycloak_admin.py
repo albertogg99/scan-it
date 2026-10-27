@@ -19,12 +19,16 @@ def provision():
 
     def api(path, method="GET", payload=None):
         body = json.dumps(payload).encode() if payload is not None else None
-        request = Request(f"{base_url}/admin/realms/{realm['realm']}/{path}", data=body, method=method,
+        url = f"{base_url}/admin/realms/{realm['realm']}" + (f"/{path}" if path else "")
+        request = Request(url, data=body, method=method,
                           headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
         with urlopen(request, timeout=30) as response:
             content = response.read()
             return json.loads(content) if content else None
 
+    lifespans = {key: realm[key] for key in ("accessTokenLifespan", "ssoSessionIdleTimeout", "ssoSessionMaxLifespan") if key in realm}
+    if lifespans:
+        api("", "PUT", lifespans)
     groups = api("groups?search=admin&exact=true")
     group = next((group for group in groups if group["path"] == "/admin"), None)
     if group is None:

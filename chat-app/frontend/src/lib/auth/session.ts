@@ -39,7 +39,7 @@ async function verify(idToken: string, nonce?: string) {
   const header = decode(headerRaw);
   const payload = decode(payloadRaw);
   const jwk = jwks.keys.find(key => key.kid === header.kid && key.kty === 'RSA' && key.use === 'sig' && (!key.alg || key.alg === 'RS256'));
-  if (header.alg !== 'RS256' || !jwk?.n || !jwk.e || !KJUR.jws.JWS.verifyJWT(idToken, KEYUTIL.getKey(jwk as unknown as Parameters<typeof KEYUTIL.getKey>[0]) as RSAKey, { alg: ['RS256'], iss: [issuer()], aud: [clientId()] })) throw new Error('Invalid ID token');
+  if (header.alg !== 'RS256' || !jwk?.n || !jwk.e || !KJUR.jws.JWS.verifyJWT(idToken, KEYUTIL.getKey(jwk as unknown as Parameters<typeof KEYUTIL.getKey>[0]) as RSAKey, { alg: ['RS256'], iss: [issuer()], aud: [clientId()], gracePeriod: 60 })) throw new Error('Invalid ID token');
   if (typeof payload.exp !== 'number' || payload.exp <= Date.now() / 1000 || typeof payload.iat !== 'number' || payload.iat > Date.now() / 1000 + 60) throw new Error('Expired or invalid ID token');
   if (nonce !== undefined && payload.nonce !== nonce) throw new Error('OIDC nonce mismatch');
 }
@@ -52,6 +52,9 @@ export async function login(returnTo: string) {
   const url = new URL(doc.authorization_endpoint);
   url.search = new URLSearchParams({ client_id: clientId(), redirect_uri: callback(), response_type: 'code', scope: 'openid profile', state, nonce, code_challenge_method: 'S256', code_challenge: pkceChallenge(verifier) }).toString();
   location.assign(url.href);
+}
+export function pendingReturnTo(params: URLSearchParams): string {
+  try { return safeReturn((JSON.parse(sessionStorage.getItem(pendingPrefix + params.get('state')) || 'null') as Transaction | null)?.returnTo ?? '/'); } catch { return '/'; }
 }
 export async function finishLogin(params: URLSearchParams): Promise<string> {
   const state = params.get('state');

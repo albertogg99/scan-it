@@ -29,6 +29,10 @@ Compose starts PostgreSQL, Keycloak, and a one-shot `keycloak-setup` service, th
 
 Default host ports: frontend 3000, API 8000, Keycloak 8080, PostgreSQL 5433 on loopback. Compose propagates `FRONTEND_PORT`, `BACKEND_PORT`, and `KEYCLOAK_PORT` into browser URLs, the issuer, CORS, and the initial realm import. Open `http://<PUBLIC_HOST>:<FRONTEND_PORT>` and allow the configured frontend/API/Keycloak ports through the firewall. Changing the frontend port or hostname after the realm exists also requires updating the `swiss-discover-web` client's redirect URIs and web origins in Keycloak; restarting does not reimport an existing realm. `localhost` on a phone is the phone. Keycloak's plain HTTP `start-dev` is only for a trusted local demo, not internet exposure.
 
+## EMT QR posters
+
+Install `chat-app/scripts/requirements-qr.txt` in a Python environment, then run `python chat-app/scripts/generate_emt_qrs.py` from the repository root. This creates SVG posters in `qr-codes/` for the bus stop, ticket demo, and BiciMAD. Use `--base-url` to change the deployment URL or `--output-dir` to change the output directory. `generate_qr.py --help` describes the single-poster generator. The center icons are Lucide pictograms, not registry icons; the deployed registry may have no icons. Verify printed QR codes with a phone before distributing them.
+
 ## MCP administration
 
 Open `/admin` and sign in as `admin` with password `admin`, or the value of `SWISS_DISCOVER_ADMIN_PASSWORD` set before account creation. This is an application account in the `swiss-discover` realm, separate from the master-realm Keycloak administrator. Change the demo password before exposing this service beyond a trusted demo. The setup service creates missing groups, the access-token group mapper, and the account on existing installations too; it does not reset existing passwords. Change an existing password in the Keycloak console.

@@ -1,6 +1,7 @@
 from collections import OrderedDict, deque
 from copy import deepcopy
 from datetime import date, datetime, timedelta, timezone
+from difflib import SequenceMatcher
 import html
 import json
 import logging
@@ -10,6 +11,7 @@ import re
 import ssl
 from threading import RLock
 import time
+import unicodedata
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -38,6 +40,7 @@ NOT_CONFIGURED = (
     "(or EMT_EMAIL and EMT_PASSWORD) in the server environment and restart"
 )
 UNAVAILABLE = "EMT API is unavailable or timed out; this does not mean no buses are running"
+MIN_SIMILARITY = 0.6
 
 
 def utc_now() -> datetime:
@@ -134,6 +137,23 @@ def coordinates(geometry: object) -> dict | None:
 
 def minutes_text(value: object) -> int | float | None:
     return number(value)
+
+
+def normalized(text: str) -> str:
+    plain = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode().lower()
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", plain).split())
+
+
+def similarity(query: str, name: str) -> float:
+    if not query or not name:
+        return 0.0
+    if query == name:
+        return 1.0
+    if query in name:
+        return 0.9
+    words = name.split()
+    hits = sum(any(SequenceMatcher(None, token, word).ratio() >= 0.8 for word in words) for token in query.split())
+    return max(SequenceMatcher(None, query, name).ratio(), 0.85 * hits / len(query.split()))
 
 
 class EmtClient:
@@ -369,6 +389,91 @@ class EmtClient:
         return label
 
     # --- tools -------------------------------------------------------------
+
+    def connected_stops(self) -> tuple[list[dict], list[str], str, bool]:
+        """Stops reachable without transfers from this stop, one entry per line, direction and stop."""
+        stop, retrieved_at, cached = self.stop_detail()
+        codes = []
+        for entry in as_list(stop.get("dataLine")):
+            code = entry.get("line") if isinstance(entry, dict) else None
+            if isinstance(code, str) and LINE_PATTERN.fullmatch(code.strip()) and code.strip() not in codes:
+                codes.append(code.strip())
+        connections, warnings = [], []
+        for code in codes:
+            for direction in (1, 2):
+                try:
+                    payload, _, _ = self.static(f"/v1/transport/busemtmad/lines/{code}/stops/{direction}/")
+                except RuntimeError:
+                    warnings.append(f"Stops of line {code} direction {direction} are unavailable; results may be incomplete.")
+                    continue
+                stops = [s for s in as_list(dig(payload, "data", 0, "stops")) if isinstance(s, dict)]
+                ids = [str(s.get("stop")) for s in stops]
+                if self.stop["id"] not in ids:
+                    continue
+                # EMT may list this stop several times in a row; count from its last occurrence.
+                start = len(ids) - 1 - ids[::-1].index(self.stop["id"])
+                label = clean_text(dig(payload, "data", 0, "label"), 20) or code
+                toward = clean_text(stops[-1].get("name"), 120)
+                seen, count = {self.stop["id"]}, 0
+                for index in range(start + 1, len(stops)):
+                    if ids[index] == ids[index - 1]:
+                        continue
+                    count += 1
+                    name = clean_text(stops[index].get("name"), 120)
+                    if ids[index] in seen or not name:
+                        continue
+                    seen.add(ids[index])
+                    connections.append({
+                        "line": label, "line_code": code, "direction": direction, "toward": toward,
+                        "stop_id": clean_text(ids[index], 10), "name": name, "stops": count,
+                    })
+        if not connections:
+            raise RuntimeError("EMT returned no usable line stop lists for this stop; connected stops are unavailable")
+        return connections, warnings, retrieved_at, cached
+
+    def search_connected_stops(self, query: str, limit: int = 8) -> dict:
+        if not isinstance(query, str) or not query.strip() or len(query.strip()) > 120:
+            raise ValueError("query must be a stop or place name of at most 120 characters")
+        limit = checked_limit(limit, 20)
+        connections, warnings, retrieved_at, cached = self.connected_stops()
+        wanted = normalized(query)
+        scores = {}
+        for name in {c["name"] for c in connections}:
+            score = similarity(wanted, normalized(name))
+            if score >= MIN_SIMILARITY:
+                scores[name] = max(score, scores.get(name, 0))
+        names = sorted(scores, key=lambda n: (-scores[n], n))[:limit]
+        return {
+            **self.envelope(retrieved_at, cached), "query": query.strip(), "stops": names, "warnings": warnings,
+            "note": "Only stops reachable from this stop without transfers are searched. Pass a name to plan_journey.",
+        }
+
+    def plan_journey(self, stop_name: str) -> dict:
+        if not isinstance(stop_name, str) or not stop_name.strip() or len(stop_name.strip()) > 120:
+            raise ValueError("stop_name must be a stop name of at most 120 characters")
+        connections, warnings, retrieved_at, cached = self.connected_stops()
+        wanted = normalized(stop_name)
+        matches = [c for c in connections if normalized(c["name"]) == wanted]
+        if not matches:
+            suggestions = self.search_connected_stops(stop_name, 5)["stops"]
+            raise ValueError(
+                f"'{clean_text(stop_name, 120)}' is not a stop reachable from stop {self.stop['id']} without transfers."
+                + (f" Closest connected stops: {', '.join(suggestions)}." if suggestions else
+                   " Use search_connected_stops to find a connected stop.")
+            )
+        options = sorted(
+            ({k: c[k] for k in ("line", "line_code", "direction", "toward", "stops", "stop_id")} for c in matches),
+            key=lambda o: (o["stops"], o["line"]),
+        )
+        return {
+            **self.envelope(retrieved_at, cached), "destination": matches[0]["name"], "options": options,
+            "warnings": warnings,
+            "note": (
+                "Direct EMT lines from this stop, scheduled network data. stops is the number of stops to ride; "
+                "toward is the line's final stop in that direction. Night lines (N...) only run at night; "
+                "use get_arrivals for live times."
+            ),
+        }
 
     def get_stop_info(self) -> dict:
         stop, retrieved_at, cached = self.stop_detail()
@@ -636,6 +741,31 @@ def register(mcp, config: dict):
     )
     def get_stop_info() -> dict:
         return guarded(client.get_stop_info)
+
+    @mcp.tool(
+        name="search_connected_stops",
+        description=(
+            "Search the stops reachable from stop 72 without transfers by a free-text name (accents and case are "
+            "ignored, typos tolerated). Returns the most similar stop names, best first. Pass one of them to "
+            "plan_journey. An empty list means no connected stop resembles the text."
+        ),
+        annotations=READ_ONLY,
+    )
+    def search_connected_stops(query: str, limit: int = 8) -> dict:
+        return guarded(client.search_connected_stops, query, limit)
+
+    @mcp.tool(
+        name="plan_journey",
+        description=(
+            "Given a stop name from search_connected_stops, list the EMT lines that go there directly from stop 72: "
+            "line, direction (1 or 2) and toward (final stop), and the number of stops to ride, fewest first. "
+            "Fails with suggestions if the name is not a connected stop. Scheduled network data; use get_arrivals "
+            "for live times."
+        ),
+        annotations=READ_ONLY,
+    )
+    def plan_journey(stop_name: str) -> dict:
+        return guarded(client.plan_journey, stop_name)
 
     @mcp.tool(
         name="get_arrivals",

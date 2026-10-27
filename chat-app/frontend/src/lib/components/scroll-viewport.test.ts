@@ -66,6 +66,27 @@ describe('chat viewport scrolling', () => {
     expect(disconnect).toHaveBeenCalledOnce();
   });
 
+  it('lets a swipe interrupt a queued scroll and stays unpinned until the bottom', () => {
+    const node = viewport();
+    const action = scrollViewport(node, { follow: true });
+    vi.advanceTimersByTime(16);
+    node.scrollTop = 800;
+    resize();
+    node.dispatchEvent(new Event('touchmove'));
+    node.scrollTop = 790;
+    node.dispatchEvent(new Event('scroll'));
+    resize();
+    vi.advanceTimersByTime(16);
+    expect(node.scrollTop).toBe(790);
+    node.scrollTop = 800;
+    node.dispatchEvent(new Event('scroll'));
+    Object.defineProperty(node, 'scrollHeight', { value: 1500, configurable: true });
+    resize();
+    vi.advanceTimersByTime(16);
+    expect(node.scrollTop).toBe(1500);
+    action.destroy();
+  });
+
   it('cleans up pending scrolls, timers and listeners on navigation', () => {
     const node = viewport();
     const action = scrollViewport(node, { follow: true });
