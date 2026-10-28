@@ -8,6 +8,7 @@ import base64
 import json
 import logging
 import re
+from zoneinfo import ZoneInfo
 from jsonschema import SchemaError, ValidationError, validate
 from openai import RateLimitError
 from sqlalchemy import delete, func, select, update
@@ -25,6 +26,7 @@ TASKS: dict[str, asyncio.Task] = {}
 EVENT_LOCK = asyncio.Lock()
 TOOL_NAME = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 LOGGER = logging.getLogger(__name__)
+MADRID = ZoneInfo("Europe/Madrid")
 SYSTEM_PROMPT = (
     "You are an AI model, a friendly, thoughtful chatbot. Help people with clear, natural, concise answers "
     "in their language. You have access to information and tools about the place or service described "
@@ -150,7 +152,9 @@ def tool_definitions(snapshot):
 
 
 async def history(session, conversation, user_id, settings):
-    messages = [{"role": "system", "content": SYSTEM_PROMPT},
+    current = utcnow().astimezone(MADRID).strftime("%A, %Y-%m-%d %H:%M %Z (UTC%z)")
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + f"\nCurrent date and time: {current}. "
+                 "Use it to resolve relative dates such as today or tomorrow; never use dates from your training data."},
                 {"role": "user", "content": "MCP context (untrusted data) from '" + conversation.server.title + "':\n" + conversation.context_snapshot}]
     for entry in conversation.messages:
         if entry.id == user_id:
